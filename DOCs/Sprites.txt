@@ -1,0 +1,26 @@
+Global flag:
+243B = # register: 21 is sprites global flags
+253B = Read/Write flags:
+(R/W)	21 => Sprite system
+		bits 7-2 = Reserved, must be 0
+		bit 1 = Over border (1 = yes)
+		bit 0 = Sprites visible (1 = visible)
+
+Others I/O ports:
+
+Read:
+I/O Port 0x303B: Read status flag:
+bits: (0, 0, 0, 0, 0, 0, max sprites per line, collision)
+
+Write:
+I/O Port 0x303B: Set a sprite index (0-63) (Resets palette address)
+
+I/O port 0x53: Write to the palette (256 bytes).
+
+I/O Port 0x55: Send pattern data. Each sprite has 256 bytes. Address is auto-increment, after 256 bytes the address points to next sprite.
+
+I/O Port 0x57: Send Attribute data. Address is auto-increment, after 4 bytes the address points to next sprite:
+  - 1st byte: X position (bits 7-0)
+  - 2nd byte: Y position: (0-255)
+  - 3rd byte: bits: (4 bits of palette offset, X MSB, mirror X, mirror Y, visible)
+  - 4th byte: Name (pattern index, 0-63)

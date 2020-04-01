@@ -1,0 +1,70 @@
+New register system:
+
+(values in Hexa)
+
+243B - Set register #
+253B - Set/read value
+
+
+Registers:
+(R)	00 => Machine ID
+(R)	01 => Version (Nibble most significant = Major, Nibble less significant = Minor)
+(R/W)	02 => Reset:
+		bits 7-3 = Reserved, must be 0
+		bit 2 = (R) Power-on reset
+		bit 1 = (R/W) if 1 Hard Reset
+		bit 0 = (R/W) if 1 Soft Reset
+(W)	03 => Set machine type, only in bootrom or config mode:
+		A write in this register disables the bootrom mode (0000 to 3FFF are mapped to the RAM instead of the internal ROM)
+		bits 7-5 = Reserved, must be 0
+		bits 4-3 = Timing:
+			00,
+			01 = ZX 48K
+			10 = ZX 128K
+			11 = ZX +2/+3e
+		bit 2 = Reserved, must be 0
+		bits 1-0 = Machine type:
+			00 = Config mode (bootrom)
+			01 = ZX 48K
+			10 = ZX 128K
+			11 = ZX +2/+3e
+(W)	04 => Set page RAM, only in config mode (no bootrom):
+		bits 7-5 = Reserved, must be 0
+		bits 4-0 = RAM page mapped in 0000-3FFF (32 pages of 16K = 512K)
+(R/W)	05 => Peripheral 1 setting, only in bootrom or config mode:
+		bits 7-6 = (W) joystick 1 mode (00 = Sinclair, 01 = Kempston, 10 = Cursor)
+		bits 5-4 = (W) joystick 2 mode (same as joy1)
+		bit 3 = (W) Enable Enhaced ULA (1 = enabled)
+		bit 2 = (R/W) 50/60 Hz mode (0 = 50Hz, 1 = 60Hz)
+		bit 1 = (R/W) Enable Scanlines (1 = enabled)
+		bit 0 = (R/W) Enable Scandoubler (1 = enabled)
+(W)	06 => Peripheral 2 setting, only in bootrom or config mode:
+		bit 7 = Enable turbo mode (0 = disabled, 1 = enabled)
+		bit 6 = DAC chip mode (0 = I2S, 1 = JAP)
+		bit 5 = Enable Lightpen  (1 = enabled)
+		bit 4 = Enable DivMMC (1 = enabled)
+		bit 3 = Enable Multiface (1 = enabled)
+		bit 2 = PS/2 mode (0 = keyboard, 1 = mouse)
+		bits 1-0 = Audio chip mode (0- = disabled, 10 = YM, 11 = AY)
+(R/W)	07 => Turbo mode:
+		bit 0 = Turbo (0 = 3.5MHz, 1 = 7MHz)
+(W)	08 => Peripheral 3 setting, only in bootrom or config mode:
+		bits 7-3 = Reserved, must be 0
+		bit 2 = Enable Timex modes (1 = enabled)
+		bit 1 = Enable TurboSound (1 = enabled)
+		bit 0 = NTSC/PAL for ZX-Uno (0 = NTSC)
+
+(R/W)	20 => Layer 2 transparency color
+		bits 7-4 = Reserved, must be 0
+		bits 3-0 = ULA transparency color (IGRB)
+(R/W)	21 => Sprite system
+		bits 7-2 = Reserved, must be 0
+		bit 1 = Over border (1 = yes)
+		bit 0 = Sprites visible (1 = visible)
+(R/W)	22 => Layer2 Offset X
+		bits 7-0 = X Offset (0-255)
+(R/W)	23 => Layer2 Offset Y
+		bist 7-6 = Reserved, must be 0
+		bits 5-0 = Y Offset (0-63)
+
+(W)	FF => Debug LEDs (DE-1 and DE-2 only)

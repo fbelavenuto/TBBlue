@@ -1,0 +1,43 @@
+24D5(R) - Machine ID and version
+	1st read => return machine ID
+	2nd read => return version (Nibble most significant = Major, Nibble less significant = Minor)
+24D5(W) - debug, DE-1 and DE-2 LEDs
+
+24D9(W) - Reset
+	bit 1 = if 1 Hard Reset
+	bit 0 = if 1 Soft Reset
+
+24DB(W) - Send machine type setting and page RAM, only in bootrom or config mode
+	A written this port disables the bootrom mode (0000 to 3FFF are mapped to the RAM instead of the internal ROM)
+	bits 7-6 = set type machine:
+		00 = Config mode (bootrom)
+		01 = ZX 48K
+		10 = ZX 128K
+		11 = ZX +2/+3e
+	bits 4-0 = RAM page mapped in 0000-3FFF (32 pages of 16K = 512K)
+
+24DD(W) - Send peripheral settings only in bootrom or config mode
+	Bits 7-6 = Determine the function of other bits:
+		if 00:
+			bit 5 = Enable Multiface (1 = enabled)
+			bit 4 = PS/2 mode (0 = keyboard, 1 = mouse)
+			bits 3-2 = joystick 1 mode (00 = Sinclair, 01 = Kempston, 10 = Cursor)
+			bits 1-0 = joystick 2 mode (same as joy1)
+		if 01:
+			bits 5-4 = Audio chip mode (00 = YM, 01 = AY, 1- = disabled)
+			bit 3 = Enable ULAplus (1 = enabled)
+			bit 2 = Enable DivMMC (1 = enabled)
+			bit 1 = Enable Scanlines (1 = enabled)
+			bit 0 = Enable Scandoubler (1 = enabled)
+		if 1-:
+			bit 5 = Enable Lightpen  (1 = enabled)
+			bit 4 = 50/60 Hz mode (0 = 50Hz, 1 = 60Hz)
+			bit 3 = DAC chip mode (0 = I2S, 1 = JAP)
+			bit 2 = Enable turbo mode (0 = disabled, 1 = enabled)
+24DD(R) - Read peripheral configurations:
+	bit 2 - Scanline
+	bit 1 - 50/60 Hz
+	bit 0 - Scandoubler
+
+24DF(R/W) - Turbo mode
+	bit 2 - Turbo (0 = 3.5MHz, 1 = 7MHz)
