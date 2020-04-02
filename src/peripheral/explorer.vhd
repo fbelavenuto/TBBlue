@@ -35,6 +35,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity explorer is
 port 
@@ -51,13 +53,18 @@ port
 	cpu_m1_n					: in    std_logic;
 	
 	-- audio
-	out_audio_mix        : out std_logic_vector(7 downto 0);
+	out_audio_A        	: out std_logic_vector(7 downto 0);
+	out_audio_B        	: out std_logic_vector(7 downto 0);
+	out_audio_C        	: out std_logic_vector(7 downto 0);
+	out_audio_mix_L      : out unsigned(7 downto 0);
+	out_audio_mix_R      : out unsigned(7 downto 0);
 	
 	-- controles
-	enable					: in  std_logic; 		-- "1" habilita a interface  
-	selected					: in  std_logic; 		-- "1" when receiving data  
-	psg_out 					: out std_logic;  	-- "1" se temos dados prontos para o barramento   
-	ctrl_aymode				: in std_logic; 		-- 0 = YM, 1 = AY
+	enable					: in  std_logic; 					-- "1" habilita a interface  
+	selected					: in  std_logic; 					-- "1" when receiving data  
+	psg_out 					: out std_logic;  				-- "1" se temos dados prontos para o barramento   
+	ctrl_aymode				: in  std_logic; 					-- 0 = YM, 1 = AY
+	stereo_mode				: in  std_logic		:= '0';	-- 0 = ABC, 1 = ACB 
 	
 	-- pinos para controle de AY externo
 	BDIR						: out std_logic;		
@@ -83,6 +90,10 @@ architecture explorer_arch of explorer is
 	signal port_a_o				: std_logic_vector(7 downto 0);
 	signal port_a_i				: std_logic_vector(7 downto 0);
 
+	signal out_audio_A_s      	: std_logic_vector(7 downto 0);
+	signal out_audio_B_s      	: std_logic_vector(7 downto 0);
+	signal out_audio_C_s     	: std_logic_vector(7 downto 0);
+
 begin
 
 	psg : entity work.YM2149
@@ -105,10 +116,10 @@ begin
 		port_b_i			=> (others => '0'),
 		port_b_o			=> open,
 
-		O_AUDIO_A		=> open,					-- Sai­da do canal A
-		O_AUDIO_B		=> open,					-- Sai­da do canal B
-		O_AUDIO_C		=> open,					-- Sai­da do canal C
-		O_AUDIO			=> out_audio_mix		-- Saida mixada dos 3 canais
+		O_AUDIO_A		=> out_audio_A_s,		-- Saida do canal A
+		O_AUDIO_B		=> out_audio_B_s,		-- Saida do canal B
+		O_AUDIO_C		=> out_audio_C_s,		-- Saida do canal C
+		O_AUDIO			=> open					-- Saida mixada dos 3 canais
 	);
 
 	psg_BDIR <= '1' when enable = '1' and selected = '1' and cpu_iorq_n = '0' and cpu_m1_n = '1' and cpu_a(15) = '1' and cpu_a(2 downto 0) = "101" and cpu_wr_n = '0' else '0';
@@ -135,5 +146,27 @@ begin
 --	rs232_tx  <= port_a_o(7);
 --	rs232_cts <= port_a_o(6);
 
+	process (clk)
+		variable mixed_l_v : unsigned(9 downto 0);
+		variable mixed_r_v : unsigned(9 downto 0);
+	begin
+		if rising_edge(clk) then
+			if stereo_mode = '0' then
+				-- ABC: A is mixed to right, B to left and right, and C to left (common in west-Europe).
+				mixed_l_v := unsigned("00" & out_audio_A_s) + unsigned("00" & out_audio_B_s);
+				mixed_r_v := unsigned("00" & out_audio_C_s) + unsigned("00" & out_audio_B_s);	
+			else
+				-- ACB: A is mixed to right, C to left and right, and B to left (common in east-Europe).
+				mixed_l_v := unsigned("00" & out_audio_A_s) + unsigned("00" & out_audio_C_s);
+				mixed_r_v := unsigned("00" & out_audio_B_s) + unsigned("00" & out_audio_C_s);				
+			end if;
+			out_audio_mix_L <= mixed_l_v(9 downto 2);
+			out_audio_mix_R <= mixed_r_v(9 downto 2);
+		end if;
+	end process;
+	
+	out_audio_A <= out_audio_A_s;
+	out_audio_B <= out_audio_B_s;
+	out_audio_C <= out_audio_C_s;
 
-end explorer_arch;
+end architecture;

@@ -65,7 +65,7 @@ architecture rtl of mouse_ctrl is
 	end component;
 		
 	signal sigsend, sigsendrdy, signewdata, newdata,
-			 sigreseting, xn, yn, sigmouse_wheel 			: std_logic;
+			 xn, yn, sigmouse_wheel 	: std_logic;
 	signal hdata, ddata 					: std_logic_vector(7 downto 0);
 	signal dx, dy							: std_logic_vector(8 downto 0);
 	signal s_mouse_x, s_mouse_y		: std_logic_vector(7 downto 0);		
@@ -115,7 +115,7 @@ begin
 		if(rising_edge(clock)) then
 			hdata <= X"00";			
 			sigsend <= '0';
-			sigreseting <= '1';
+--			sigreseting <= '1';
 			
 			case state is
 			
@@ -228,7 +228,7 @@ begin
 						
 			
 				when CLEAR =>
-					sigreseting <= '0';
+--					sigreseting <= '0';
 					count := 0;					
 			end case;
 			

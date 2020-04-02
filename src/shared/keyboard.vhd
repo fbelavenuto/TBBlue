@@ -58,7 +58,7 @@ entity keyboard is
 		rows				: in    std_logic_vector(7 downto 0);
 		-- Column outputs to ULA
 		cols				: out   std_logic_vector(4 downto 0);
-		teclasF			: out   std_logic_vector(11 downto 0);
+		functionkeys_o	: out   std_logic_vector(11 downto 0);
 		core_reload_o	: out   std_logic
 	);
 end keyboard;
@@ -146,7 +146,7 @@ begin
 			keys(6) <= (others => '1');
 			keys(7) <= (others => '1');
 
-			teclasF <= (others => '0');
+			functionkeys_o <= (others => '0');
 			alt_s		<= '1';
 			ctrl_s	<= '1';
 
@@ -231,18 +231,18 @@ begin
 							when KEY_KP9			=> keys(4)(1) <= release; -- 9
 							
 							-- Teclas para o FPGA e nao para o Speccy
-							when KEY_F1				=> teclasF(0)	<= not release;
-							when KEY_F2				=> teclasF(1)	<= not release;
-							when KEY_F3				=> teclasF(2)	<= not release;
-							when KEY_F4				=> teclasF(3)	<= not release;
-							when KEY_F5				=> teclasF(4)	<= not release;
-							when KEY_F6				=> teclasF(5)	<= not release;
-							when KEY_F7				=> teclasF(6)	<= not release;
-							when KEY_F8				=> teclasF(7)	<= not release;
-							when KEY_F9				=> teclasF(8)	<= not release;
-							when KEY_F10			=> teclasF(9)	<= not release;
-							when KEY_F11			=> teclasF(10)	<= not release;
-							when KEY_F12			=> teclasF(11)	<= not release;
+							when KEY_F1				=> functionkeys_o(0)	<= not release;
+							when KEY_F2				=> functionkeys_o(1)	<= not release;
+							when KEY_F3				=> functionkeys_o(2)	<= not release;
+							when KEY_F4				=> functionkeys_o(3)	<= not release;
+							when KEY_F5				=> functionkeys_o(4)	<= not release;
+							when KEY_F6				=> functionkeys_o(5)	<= not release;
+							when KEY_F7				=> functionkeys_o(6)	<= not release;
+							when KEY_F8				=> functionkeys_o(7)	<= not release;
+							when KEY_F9				=> functionkeys_o(8)	<= not release;
+							when KEY_F10			=> functionkeys_o(9)	<= not release;
+							when KEY_F11			=> functionkeys_o(10)	<= not release;
+							when KEY_F12			=> functionkeys_o(11)	<= not release;
 
 							-- Other special keys sent to the ULA as key combinations
 							when KEY_BACKSPACE	=> keys(0)(0) <= release; -- Backspace (CAPS 0)

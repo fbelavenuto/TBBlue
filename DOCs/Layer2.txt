@@ -1,7 +1,0 @@
-Port 0x123B: Layer2 control
-	bits 7-6 = RAM page
-	bits 5-4 = Layer order
-	bit 3 = Reserved
-	bit 2 = Access Type
-	bit 1 = Visible
-	bit 0 = Access Enable

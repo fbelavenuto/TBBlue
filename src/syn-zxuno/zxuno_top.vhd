@@ -94,15 +94,6 @@ entity zxuno_top is
 
 		-- GPIO
 --		gpio_io				: inout std_logic_vector(35 downto 6)	:= (others => 'Z');
-		-- Joystick 2
-		joy2_up_i			: in    std_logic;
-		joy2_down_i			: in    std_logic;
-		joy2_left_i			: in    std_logic;
-		joy2_right_i		: in    std_logic;
-		joy2_fire1_i		: in    std_logic;
-		joy2_fire2_i		: in    std_logic;
-
-		lightpen_i			: in    std_logic;
 
 		-- Debug
 		led_o					: out   std_logic								:= '0'
@@ -125,11 +116,11 @@ architecture behavior of zxuno_top is
 	signal core_reload_s		: std_logic;
 		
 	-- Memory buses
-	signal vram_a_s			: std_logic_vector(18 downto 0);
+	signal vram_a_s			: std_logic_vector(19 downto 0);
 	signal vram_dout_s		: std_logic_vector(7 downto 0);
 	signal vram_cs_s			: std_logic;
 	signal vram_oe_s			: std_logic;
-	signal ram_a_s				: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_a_s				: std_logic_vector(19 downto 0);
 	signal ram_din_s			: std_logic_vector(7 downto 0);
 	signal ram_dout_s			: std_logic_vector(7 downto 0);
 	signal ram_cs_s			: std_logic;
@@ -141,8 +132,10 @@ architecture behavior of zxuno_top is
 	-- Audio
 	signal spk_s				: std_logic;	
 	signal mic_s				: std_logic;
-	signal psg_s				: unsigned( 9 downto 0);
-	signal sid_s				: unsigned(17 downto 0);
+	signal psg_L_s				: unsigned( 7 downto 0);
+	signal psg_R_s				: unsigned( 7 downto 0);
+	signal sid_L_s				: unsigned(17 downto 0);
+	signal sid_R_s				: unsigned(17 downto 0);
 
 	-- Keyboard
 	signal kb_rows_s			: std_logic_vector(7 downto 0);
@@ -200,9 +193,9 @@ begin
 		versao			=> X"18",			-- 1.08
 		usar_kempjoy	=> '1',
 		usar_keyjoy		=> '1',
-		use_turbosnd_g	=> true,
-		use_overlay_g	=> true,
-		use_sprites_g	=> true
+		use_turbosnd_g	=> false,
+		use_sid_g		=> false,
+		use_1024kb_g	=> false
 	)
 	port map (
 		-- Clock
@@ -220,7 +213,7 @@ begin
 		iKeyScanDoubler	=> FKeys_s(2),
 		iKeyScanlines		=> FKeys_s(7),
 		iKeyDivMMC			=> FKeys_s(10),
-		iKeyM1				=> FKeys_s(9),
+		iKeyMF				=> FKeys_s(9),
 		iKeyTurbo			=> FKeys_s(8),
 		iKeysHard			=> "00",
 
@@ -274,8 +267,10 @@ begin
 		iEAR					=> ear_i,
 		oSPK					=> spk_s,
 		oMIC					=> mic_s,
-		oPSG					=> psg_s,
-		oSID					=> sid_s,
+		oPSG_L				=> psg_L_s,
+		oPSG_R				=> psg_R_s,
+		oSID_L				=> sid_L_s,
+		oSID_R				=> sid_R_s,
 		oDAC					=> open,
 
 		-- Joystick
@@ -292,7 +287,7 @@ begin
 		oPS2mode				=> open,
 
 		-- Lightpen
-		iLp_signal			=> lightpen_i,
+		iLp_signal			=> '0',--lightpen_i,
 		oLp_en				=> open,
 
 		-- RTC
@@ -326,11 +321,6 @@ begin
 		oCpu_rfsh_n			=> open,
 		iCpu_iorqula		=> '0',
 
-		-- Overlay
-		oOverlay_addr 		=> open,
-		iOverlay_data		=> (others => '0'),
-		pixel_clock_o     => open,
-	
 		-- Debug
 		oD_leds				=> open,
 		oD_reg_o				=> open,
@@ -342,14 +332,14 @@ begin
 	port map(
 		clk					=> clock_master_s,
 		-- Porta 0 = VRAM
-		porta0_addr			=> vram_a_s,
+		porta0_addr			=> vram_a_s(18 downto 0),
 		porta0_ce			=> vram_cs_s,
 		porta0_oe			=> vram_oe_s,
 		porta0_we			=> '0',
 		porta0_din			=> (others => '0'),
 		porta0_dout			=> vram_dout_s,
 		-- Porta 1 = Upper RAM
-		porta1_addr			=> ram_a_s,
+		porta1_addr			=> ram_a_s(18 downto 0),
 		porta1_ce			=> ram_cs_s,
 		porta1_oe			=> ram_oe_s,
 		porta1_we			=> ram_we_s,
@@ -371,8 +361,10 @@ begin
 		ear_i		=> ear_i,
 		spk_i		=> spk_s,
 		mic_i		=> mic_s,
-		psg_i		=> psg_s,
-		sid_i		=> sid_s,
+		psg_L_i	=> psg_L_s,
+		psg_R_i	=> psg_R_s,
+		sid_L_i	=> sid_L_s,
+		sid_R_i	=> sid_R_s,
 		dac_r_o	=> dac_r_o,
 		dac_l_o	=> dac_l_o
 	);
@@ -387,11 +379,13 @@ begin
 		enable				=> '1',
 		clock					=> clock_master_s,
 		reset					=> poweron_s,
+		--
 		ps2_clk				=> ps2_clk_io,
 		ps2_data				=> ps2_data_io,
+		--
 		rows					=> kb_rows_s,
 		cols					=> kb_columns_s,
-		teclasF				=> FKeys_s,
+		functionkeys_o	=> FKeys_s,
 		core_reload_o		=> core_reload_s
 	);
 
@@ -483,7 +477,7 @@ begin
 	-- Joystick
 	-- order: Fire2, Fire, Up, Down, Left, Right
 	joy1_s	<= not (joy_fire2_i  & joy_fire1_i  & joy_up_i  & joy_down_i  & joy_left_i  & joy_right_i);
-	joy2_s	<= not (joy2_fire2_i & joy2_fire1_i & joy2_up_i & joy2_down_i & joy2_left_i & joy2_right_i);
+	joy2_s	<= (others => '0');
 
 	-- VGA (ULA and ULA+ mixer)
 	rgb_comb_s <= rgb_r_s & rgb_g_s & rgb_b_s;

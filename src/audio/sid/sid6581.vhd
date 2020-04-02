@@ -5,8 +5,7 @@
 --     A fully functional SID chip implementation in VHDL
 --
 -------------------------------------------------------------------------------------
---	to do:		- filter
---					- smaller implementation, use multiplexed channels
+--	to do:	- smaller implementation, use multiplexed channels
 --
 -- Synthesize
 -- WARNING:Xst:1988 - Unit <vic_II>: instances <Mcompar__n0411>, <Mcompar__n0337> of unit <LPM_COMPARE_15> and
@@ -136,8 +135,6 @@ architecture Behavioral of sid6581 is
 
 begin
 
-	audio_o <= unsigned(voice_volume);
-
 	sid_voice_1: sid_voice
 	port map(
 		clk_1MHz		=> clk_1MHz,
@@ -192,9 +189,6 @@ begin
 		voice			=> voice_3
 	);
 	-------------------------------------------------------------------------------------
-
-	voice_mixed		<= (("00" & voice_1) + ("00" & voice_2)) + (voice_3 + DC_offset);		--add voice 1+2 and 3, we must do this in this way to create the shortest timing path (keep in mind that a basic adder can only add two variables)
-	voice_volume	<= voice_mixed * ('0' & Filter_Mode_Vol(3 downto 1));						--multiply the volume register with the voices
 
 	-- Divide clock
 	divider: process(reset_i, clock_i)
@@ -332,5 +326,74 @@ begin
 	end process;
 
 	data_o				<= do_buf;
+
+	-- SID filters
+
+	fblk: block
+	  signal voice1_signed: signed(12 downto 0);
+	  signal voice2_signed: signed(12 downto 0);
+	  signal voice3_signed: signed(12 downto 0);
+	  constant ext_in_signed: signed(12 downto 0) := to_signed(0,13);
+	  signal filtered_audio: signed(18 downto 0);
+	  signal tick_q1, tick_q2: std_logic;
+	  signal input_valid: std_logic;
+	  signal unsigned_audio: std_logic_vector(17 downto 0);
+	  signal unsigned_filt: std_logic_vector(18 downto 0);
+	  signal ff1: std_logic;
+	begin
+
+	  process (clk_1MHz,reset_i)
+	  begin
+			if reset_i='1' then
+			  ff1<='0';
+			else
+
+		 if rising_edge(clk_1MHz) then
+			  ff1<=not ff1;
+		 end if;
+		 end if;
+	  end process;
+
+	  process(clock_i)
+	  begin
+		 if rising_edge(clock_i) then
+			tick_q1 <= ff1;
+			tick_q2 <= tick_q1;
+		 end if;
+	  end process;
+
+	  input_valid<='1' when tick_q1 /=tick_q2 else '0';
+
+
+	  voice1_signed <= signed(voice_1 & "0") - 4096;
+	  voice2_signed <= signed(voice_2 & "0") - 4096;
+	  voice3_signed <= signed(voice_3 & "0") - 4096;
+
+	  filters: entity work.sid_filters 
+	  port map (
+		 clk       => clock_i,
+		 rst       => reset_i,
+		 -- SID registers.
+		 Fc_lo     => Filter_Fc_lo,
+		 Fc_hi     => Filter_Fc_hi,
+		 Res_Filt  => Filter_Res_Filt,
+		 Mode_Vol  => Filter_Mode_Vol,
+		 -- Voices - resampled to 13 bit
+		 voice1    => voice1_signed,
+		 voice2    => voice2_signed,
+		 voice3    => voice3_signed,
+		 --
+		 input_valid => input_valid,
+		 ext_in    => ext_in_signed,
+
+		 sound     => filtered_audio,
+		 valid     => open
+	  );
+
+		 unsigned_filt <= std_logic_vector(filtered_audio + "1000000000000000000");
+		 unsigned_audio <= unsigned_filt(18 downto 5) * ('0' & Filter_Mode_Vol(3 downto 1));
+		 audio_o <= unsigned(unsigned_audio);
+
+	end block;
 
 end Behavioral;

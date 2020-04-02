@@ -40,13 +40,14 @@ typedef struct {
 
 //                        12345678901234567890123456789012
 const char TITLE[]     = "         TBBLUE BOOT ROM        ";
-//const char TITLE_DEV[] = "    ZX Spectrum Next Dev Kit    ";
+
 const char YESNO[2][4] = {"NO ","YES"};						// type 0
 const char AYYM[3][4]  = {"AY ","YM ","OFF"};				// type 1
 const char JOYS[3][7]  = {"Sincla","Kempst","Cursor"};		// type 2
 const char PS_2[2][6]  = {"Keyb.","Mouse"};					// type 3
 const char JOY2[2][5]  = {"JOY","M.LP"};					// type 4
 const char  DAC[2][4]  = {"I2S","JAP"};					    // type 5
+const char STEREO[2][4] = {"ABC","ACB"};					// type 6
 
 FATFS		FatFs;		/* FatFs work area needed for each volume */
 FIL			Fil;		/* File object needed for each open file */
@@ -68,6 +69,7 @@ unsigned char dac[2]         = {0, 0};
 unsigned char ena_turbo[2]   = {0, 0};
 unsigned char ntsc[2]        = {0, 0};
 unsigned char turbosound[2]  = {0, 0};
+unsigned char stereomode[2]  = {0, 0};
 
 unsigned char menu_default = 0;
 unsigned char menu_cont = 0;
@@ -115,13 +117,14 @@ const configitem peripherals2[] = {
 	{0, "Multiface", mf },
 	{0, "Enh. ULA",  enh_ula },
 	{0, "Timex",     timex },
-	{1, "Sound",     psgmode },
 	{0, "60 Hz",     freq5060 },
+	{5, "DAC",       dac },
+	{1, "Sound",     psgmode },
+	{6, "Stereo M.", stereomode },
 	{0, "Scandoubl", scandoubler },
 	{0, "Scanline",  scanlines },
 	{0, "Lightpen",  lightpen },
 	{3, "PS/2",      ps2 },
-	{5, "DAC",       dac },
 	{0, "Ena Turbo", ena_turbo },
 };
 const unsigned char itemcount2 = sizeof(peripherals2) / sizeof(configitem);
@@ -136,28 +139,14 @@ const configitem peripherals3[] = {
 	{0, "Enh. ULA",  enh_ula },
 	{0, "Timex",     timex },
 	{0, "60 Hz",     freq5060 },
-	{1, "Sound",     psgmode },
 	{0, "Ena Turbo", ena_turbo },
-	{4, "P.Joy2",    lightpen },
+	{1, "Sound",     psgmode },
+	{6, "Stereo M.", stereomode },
 	{2, "Joy 1",     joystick1 },
 	{2, "Joy 2",     joystick2 },
+	{4, "P.Joy2",    lightpen },
 };
 const unsigned char itemcount3 = sizeof(peripherals3) / sizeof(configitem);
-
-// WXEDA
-const configitem peripherals4[] = {
-	//   123456789
-	{0, "DivMMC",    divmmc },
-	{0, "Multiface", mf },
-	{0, "Scandoubl", scandoubler },
-	{0, "Scanline",  scanlines },
-	{0, "60 Hz",     freq5060 },
-	{0, "Enh. ULA",  enh_ula },
-	{0, "Timex",     timex },
-	{1, "Sound",     psgmode },
-	{0, "TurboSnd",  turbosound },
-};
-const unsigned char itemcount4 = sizeof(peripherals4) / sizeof(configitem);
 
 // ZX-Uno
 const configitem peripherals5[] = {
@@ -166,7 +155,7 @@ const configitem peripherals5[] = {
 	{0, "Multiface", mf },
 	{1, "Sound",     psgmode },
 	{0, "TurboSnd",  turbosound },
-	{0, "Lightpen",  lightpen },
+	{6, "Stereo M.", stereomode },
 	{0, "Scanline",  scanlines },
 	{0, "SCART",     scandoubler },
 	{0, "NTSC",      ntsc },
@@ -178,23 +167,6 @@ const configitem peripherals5[] = {
 	{2, "Joy 2",     joystick2 },
 };
 const unsigned char itemcount5 = sizeof(peripherals5) / sizeof(configitem);
-
-// ZX Spectrum Next
-const configitem peripherals6[] = {
-	//   123456789
-	{0, "DivMMC",    divmmc },
-	{0, "Multiface", mf },
-	{0, "Enh. ULA",  enh_ula },
-	{0, "Timex",     timex },
-	{1, "Sound",     psgmode },
-	{0, "TurboSnd",  turbosound },
-	{0, "Ena Turbo", ena_turbo },
-	{0, "60 Hz",     freq5060 },
-	{0, "Scandoubl", scandoubler },
-	{0, "Scanline",  scanlines },
-	{2, "Joystick",  joystick1 },
-};
-const unsigned char itemcount6 = sizeof(peripherals6) / sizeof(configitem);
 
 
 configitem *peripherals = peripherals1;
@@ -249,6 +221,11 @@ static void printVal() {
 		case 5:
 			vdp_prints(DAC[*value]);
 		break;
+
+		case 6:
+			vdp_prints(STEREO[*value]);
+		break;
+
 	}
 }
 
@@ -338,7 +315,7 @@ static void readkeyb()
 			while(!(HROW6 & 0x01));
 			return;
 		}
-		// Verify if user changed 50/60Hz or scandoubler by keyboard
+		// Verify that the user has changed 50/60Hz or scandoubler by keyboard
 		i = 0;
 		REG_NUM = REG_PERIPH1;
 		t = (REG_VAL & 0x07);
@@ -438,6 +415,7 @@ static void mode_edit() {
 	ena_turbo[1]   = ena_turbo[0];
 	ntsc[1]        = ntsc[0];
 	turbosound[1]  = turbosound[0];
+	stereomode[1]  = stereomode[0];
 
 	while (1) {
 		l = it >> 1;
@@ -479,6 +457,7 @@ static void mode_edit() {
 	ena_turbo[0]   = ena_turbo[1];
 	ntsc[0]        = ntsc[1];
 	turbosound[0]  = turbosound[1];
+	stereomode[0]  = stereomode[1];
 
 	config_changed = 1;
 }
@@ -553,6 +532,7 @@ static void save_config()
 	f_printf(&Fil, "enh_ula=%d\n",     enh_ula[0]);
 	f_printf(&Fil, "timex=%d\n",       timex[0]);
 	f_printf(&Fil, "psgmode=%d\n",     psgmode[0]);
+	f_printf(&Fil, "stereomode=%d\n",  stereomode[0]);
 	f_printf(&Fil, "turbosound=%d\n",  turbosound[0]);
 	f_printf(&Fil, "divmmc=%d\n",      divmmc[0]);
 	f_printf(&Fil, "mf=%d\n",          mf[0]);
@@ -626,6 +606,8 @@ void main()
 			timex[0] = atoi(line+6);
 		} else if (strncmp(line, "psgmode=", 8) == 0) {
 			psgmode[0] = atoi(line+8);
+		} else if (strncmp(line, "stereomode=", 11) == 0) {
+			stereomode[0] = atoi(line+11);
 		} else if (strncmp(line, "turbosound=", 11) == 0) {
 			turbosound[0] = atoi(line+11);
 		} else if (strncmp(line, "divmmc=", 7) == 0) {
@@ -679,15 +661,9 @@ void main()
 	if (mach_id == HWID_VTRUCCO) {
 		peripherals = (configitem *)peripherals2;
 		itemsCount = itemcount2;
-	} else if (mach_id == HWID_ZXNEXT) {
-		peripherals = (configitem *)peripherals6;
-		itemsCount = itemcount6;
 	} else if (mach_id == HWID_FBLABS) {
 		peripherals = (configitem *)peripherals3;
 		itemsCount = itemcount3;
-	} else if (mach_id == HWID_WXEDA) {
-		peripherals = (configitem *)peripherals4;
-		itemsCount = itemcount4;
 	} else if (mach_id == HWID_ZXUNO) {
 		peripherals = (configitem *)peripherals5;
 		itemsCount = itemcount5;

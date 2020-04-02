@@ -26,45 +26,48 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Defines */
 
-//                    12345678901234567890123456789012
-const char TITLE[] = "         TBBLUE BOOT ROM        ";
-//const char TITLE[] = "    ZX Spectrum Next Dev Kit    ";
-
+/* Constants */
+//                           12345678901234567890123456789012
+static const char TITLE[] = "         TBBLUE BOOT ROM        ";
+static const unsigned char *FW_version = "1.01"; 
+// minimal required for this FW 
+static const unsigned short minimal = 0x0101; // 01 01 = 1.01
 
 /* Variables */
-FATFS		FatFs;		/* FatFs work area needed for each volume */
-FIL			Fil, Fil2;	/* File object needed for each open file */
-FRESULT		res;
-
-unsigned char scandoubler = 1;
-unsigned char freq5060 = 0;
-unsigned char enh_ula = 1;
-unsigned char timex   = 0;
-unsigned char psgmode = 0;
-unsigned char divmmc = 1;
-unsigned char mf = 1;
-unsigned char joystick1 = 0;
-unsigned char joystick2 = 0;
-unsigned char ps2 = 0;
-unsigned char lightpen = 0;
-unsigned char scanlines = 0;
-unsigned char menu_default = 0;
-unsigned char menu_cont = 0;
-unsigned char config_changed = 0;
-unsigned char dac = 0;
-unsigned char ena_turbo = 1;
-unsigned char ntsc = 0;
-unsigned char turbosound = 0;
-
-char			line[256], temp[256], *filename;
-char			romesxmmc[14] = ESXMMC_FILE, romm1[14] = MF1_FILE, romm128[14] = MF128_FILE, romm3[14] = MF3_FILE;
-char			*comma1, *comma2;
-char			titletemp[32];
-char			romfile[14];
-unsigned char	l, found = 0;
-unsigned char	opc = 0;
-unsigned int	bl = 0;
-unsigned char	mode = 0;
+static unsigned short current = 0;
+static FATFS		FatFs;		/* FatFs work area needed for each volume */
+static FIL			Fil, Fil2;	/* File object needed for each open file */
+static FRESULT		res;
+static unsigned char scandoubler = 1;
+static unsigned char freq5060 = 0;
+static unsigned char enh_ula = 1;
+static unsigned char timex   = 0;
+static unsigned char psgmode = 0;
+static unsigned char divmmc = 1;
+static unsigned char mf = 1;
+static unsigned char joystick1 = 0;
+static unsigned char joystick2 = 0;
+static unsigned char ps2 = 0;
+static unsigned char lightpen = 0;
+static unsigned char scanlines = 0;
+static unsigned char menu_default = 0;
+static unsigned char menu_cont = 0;
+static unsigned char config_changed = 0;
+static unsigned char dac = 0;
+static unsigned char ena_turbo = 1;
+static unsigned char ntsc = 0;
+static unsigned char turbosound = 0;
+static unsigned char stereomode = 0;
+static char			line[256], temp[256], *filename;
+static char			romesxmmc[14] = ESXMMC_FILE, romm1[14] = MF1_FILE, romm128[14] = MF128_FILE, romm3[14] = MF3_FILE;
+static char			*comma1, *comma2;
+static char			titletemp[32];
+static char			romfile[14];
+static unsigned char	l, found = 0;
+static unsigned char	opc = 0;
+static unsigned int		bl = 0;
+static unsigned char	mode = 0;
+static unsigned char	mach_id, mach_version_major, mach_version_minor;
 
 /* Private functions */
 
@@ -226,56 +229,6 @@ void load_and_start()
 	for(;;);
 }
 
-/*******************************************************************************/
-/*
-static void make_config_file()
-{
-	res = f_open(&Fil2, CONFIG_FILE, FA_WRITE | FA_CREATE_ALWAYS);
-	if (res != FR_OK) {
-		//             12345678901234567890123456789012
-		display_error("Error making 'config.ini'!");
-	}
-	f_puts(";Menu format\n", &Fil2);
-	f_puts(";menu=<title>,<mode>,<ROM file>\n", &Fil2);
-	f_puts(";\n", &Fil2);
-	f_puts("; ZX type:\n", &Fil2);
-	f_puts("; 0 = Spectrum 48K (ROM must be 16K)\n", &Fil2);
-	f_puts("; 1 = Spectrum 128K (ROM must be 32K)\n", &Fil2);
-	f_puts("; 2 = Spectrum 3e (ROM must be 64K)\n\n", &Fil2);
-	f_puts("; Joystick:\n", &Fil2);
-	f_puts("; 0 = Sinclair, 1 = Kempston, 2 = Cursor\n\n", &Fil2);
-	f_puts("; Initial configuration\n", &Fil2);
-	f_puts("scandoubler=1\n", &Fil2);
-	f_puts("50_60hz=0\n", &Fil2);
-	f_puts("ntsc=0\n", &Fil2);
-	f_puts("enh_ula=1\n", &Fil2);
-	f_puts("timex=0\n", &Fil2);
-	f_puts("psgmode=0\n", &Fil2);
-	f_puts("turbosound=0\n", &Fil2);
-	f_puts("divmmc=1\n", &Fil2);
-	f_puts("mf=1\n", &Fil2);
-	f_puts("joystick1=0\n", &Fil2);
-	f_puts("joystick2=0\n", &Fil2);
-	f_puts("ps2=0\n", &Fil2);
-	f_puts("lightpen=0\n", &Fil2);
-	f_puts("scanlines=0\n", &Fil2);
-	f_puts("dac=0\n", &Fil2);
-	f_puts("turbo=1\n", &Fil2);
-	f_puts("; Menu\n", &Fil2);
-	f_puts("default=2\n", &Fil2);
-	f_puts("menu=TK90X,0,tk90x.rom\n", &Fil2);
-	f_puts("menu=TK95,0,tk95.rom\n", &Fil2);
-	f_puts("menu=Spectrum 48K,0,48.rom\n", &Fil2);
-	f_puts("menu=Spectrum 128K,1,128.rom\n", &Fil2);
-	f_puts("menu=Spectrum +3e,2,3e.rom\n", &Fil2);
-	f_puts("menu=ZX80,1,zx80.rom\n", &Fil2);
-	f_puts("menu=ZX81,1,zx81.rom\n", &Fil2);
-	f_puts("menu=Jupiter Ace,1,ace.rom\n", &Fil2);
-	f_puts("\n", &Fil2);
-	f_close(&Fil2);
-}
-*/
-
 /* Public functions */
 
 /*******************************************************************************/
@@ -298,6 +251,36 @@ void main()
 
 	REG_NUM = REG_MACHTYPE;
 	REG_VAL = 0;						// disable bootrom
+	REG_NUM = REG_MACHID;
+	mach_id = REG_VAL;
+	
+	REG_NUM = REG_VERSION;
+	l = REG_VAL;
+	mach_version_major = l >> 4;
+	mach_version_minor = l & 0x0F;
+	current = (mach_version_major << 8) | (mach_version_minor);
+
+	vdp_gotoxy(15, 22); 
+	vdp_prints("Firmware v.");
+	vdp_prints(FW_version);
+	vdp_gotoxy(19, 23);
+	vdp_prints("Core v.");
+	sprintf(line, "%d.%02d", mach_version_major, mach_version_minor);
+	vdp_prints(line);
+
+	if (current < minimal) {
+		vdp_setcolor(COLOR_RED, COLOR_BLACK, COLOR_WHITE);
+
+		vdp_gotoxy(0, 9);
+		vdp_prints ("    Please update your core!\n\n");
+		vdp_prints("You need TBU v. ");
+		sprintf(line, "%lu.%02d", (minimal >> 8) & 0xff, minimal & 0xff);
+		vdp_prints(line);
+		vdp_prints(" or later\n");
+		
+		ULAPORT = COLOR_RED;
+		for(;;);
+	}
 
 	vdp_gotoxy(0,2);
 	prints_help();
@@ -311,6 +294,7 @@ START:
 		make_config_file();
 	}
 */
+
 	res = f_open(&Fil, CONFIG_FILE, FA_READ);
 	if (res != FR_OK) {
 		if (error_count > 0) {
@@ -344,6 +328,8 @@ START:
 			timex = atoi(line+6);
 		} else if (strncmp(line, "psgmode=", 8) == 0) {
 			psgmode = atoi(line+8);
+ 		} else if (strncmp(line, "stereomode=", 11) == 0) {
+			stereomode = atoi ( line + 11 );
 		} else if (strncmp(line, "turbosound=", 11) == 0) {
 			turbosound = atoi(line+11);
 		} else if (strncmp(line, "divmmc=", 7) == 0) {
@@ -356,12 +342,12 @@ START:
 			joystick2 = atoi(line+10);
 		} else if (strncmp(line, "ps2=", 4) == 0) {
 			ps2 = atoi(line+4);
-		} else if (strncmp(line, "dac=", 4) == 0) {
-			dac = atoi(line+4);
 		} else if (strncmp(line, "lightpen=", 9) == 0) {
 			lightpen = atoi(line+9);
 		} else if (strncmp(line, "scanlines=", 10) == 0) {
 			scanlines = atoi(line+10);
+		} else if (strncmp(line, "dac=", 4) == 0) {
+			dac = atoi(line+4);
 		} else if (strncmp(line, "turbo=", 6) == 0) {
 			ena_turbo = atoi(line+6);
 		} else if (strncmp(line, "default=", 8) == 0) {
@@ -434,6 +420,7 @@ START:
 
 	REG_NUM = REG_PERIPH3;
 	opc = 0;
+	if (stereomode)  opc |= 0x20;		// bit 5
 	if (timex)       opc |= 0x04;		// bit 2
 	if (turbosound)  opc |= 0x02;		// bit 1
 	if (ntsc)        opc |= 0x01;		// bit 0

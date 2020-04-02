@@ -69,6 +69,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
 
 entity zxula_timing is
 	port (
@@ -82,9 +83,9 @@ entity zxula_timing is
 		hblank_n_o		: out std_logic;
 		vblank_n_o		: out std_logic;
 		int_n_o			: out std_logic;
-		-- Sprites
-		spt_hcount_o	: out unsigned(8 downto 0);
-		spt_vcount_o	: out unsigned(8 downto 0)
+		-- Raster int
+		rint_ctrl_i		: in  std_logic_vector(1 downto 0);
+		rint_line_i		: in  std_logic_vector(8 downto 0)
 	);
 end entity;
 
@@ -92,6 +93,8 @@ architecture Behavior of zxula_timing is
 
 	signal hc_s 						: unsigned(8 downto 0)				:= (others => '0');
 	signal vc_s 						: unsigned(8 downto 0)				:= (others => '0');
+	signal int_ula_n_s				: std_logic;
+	signal int_raster_n_s			: std_logic;
 	-- Counter values
 	signal c_max_hc_s					: unsigned(8 downto 0);
 	signal c_max_vc_s					: unsigned(8 downto 0);
@@ -107,9 +110,6 @@ architecture Behavior of zxula_timing is
 	signal c_int_maxh_s				: unsigned(8 downto 0);
 	signal c_int_minv_s				: unsigned(8 downto 0);
 	signal c_int_maxv_s				: unsigned(8 downto 0);
-	-- sprites
-	signal spt_hc_s 					: unsigned(8 downto 0)				:= (others => '0');
-	signal spt_vc_s 					: unsigned(8 downto 0)				:= (others => '0');
 
 begin
 
@@ -228,34 +228,29 @@ begin
 
 	-- INT generation
 	process (hc_s, vc_s, c_int_minv_s, c_int_minh_s, c_int_maxv_s, c_int_maxh_s)
+		variable rint_minus_one_v	: unsigned(8 downto 0);
 	begin
-		int_n_o <= '1';
-		if vc_s >= c_int_minv_s and vc_s <= c_int_maxv_s then
-			if hc_s >= c_int_minh_s and hc_s <= c_int_maxh_s then
-				int_n_o <= '0';
-			end if;
-		end if;
-	end process;
-
-	-- Sprite counters
-	process (clock_i)
-	begin
-		if rising_edge(clock_i) then
-			if hc_s = (c_max_hc_s - 20) then
-				spt_hc_s <= (others => '0');
-				if vc_s = (c_max_vc_s - 33) then
-					spt_vc_s <= (others => '0');
-				else
-					spt_vc_s <= spt_vc_s + 1;
+		int_ula_n_s <= '1';
+		int_raster_n_s <= '1';
+		rint_minus_one_v := unsigned(rint_line_i) - 1;
+		if rint_ctrl_i(1) = '0' then
+			if vc_s >= c_int_minv_s and vc_s <= c_int_maxv_s then
+				if hc_s >= c_int_minh_s and hc_s <= c_int_maxh_s then
+					int_ula_n_s <= '0';
 				end if;
-			else
-				spt_hc_s <= spt_hc_s + 1;
+			end if;
+		end if;
+		if rint_ctrl_i(0) = '1' and hc_s >= 256 and hc_s <= 319 then
+			if rint_line_i = 0 and vc_s = c_max_vc_s then
+				int_raster_n_s <= '0';
+			end if;
+			if rint_line_i /= 0 and vc_s = rint_minus_one_v then
+				int_raster_n_s <= '0';
 			end if;
 		end if;
 	end process;
-
-	spt_hcount_o <= spt_hc_s;
-	spt_vcount_o <= spt_vc_s;
+	
+	int_n_o <= int_ula_n_s and int_raster_n_s;
 
 end architecture;
 

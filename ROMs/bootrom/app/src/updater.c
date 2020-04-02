@@ -105,10 +105,6 @@ void main() {
 	mach_id = REG_VAL;
 	REG_NUM = REG_VERSION;
 	mach_version = REG_VAL;
-	
-	if (mach_id == HWID_ZXNEXT_AB) {
-		mach_id = HWID_ZXNEXT;
-	}
 
 	vdp_init();
 	vdp_setcolor(COLOR_BLACK, COLOR_BLUE, COLOR_WHITE);

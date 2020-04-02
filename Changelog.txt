@@ -1,0 +1,38 @@
+Main:
+- SID filters added.
+- PAN control from AYs and SID
+- Implemented Floating-bus in I/O port 0xFF
+- Implemented raster interrupt
+- Fixed MC joysticks.
+- Removed Next modules specific (Sprites, Layer2, etc)
+- Added support to 1MB SRAM: Changed SRAM map (Need change TBBLUE.FW between updates)
+- Added show version of Core and Firmware at boot time, and minimum core version check
+
+Versão 1.08:
+.Alterações no Core (todas as placas):
+	- Protocolo PS/2 reescrito para suportar mais variações de mouse.
+	- Correção do modo de interrupção IM2 do Z80 (corrige o Shadow Warrios 128k e provavelmente outros jogos).
+	- Correção na contenção de memória do Spectrum +3 (corrige a voz do Dizzy Fantasy World e provavelmente outros jogos)
+	- Modo de vídeo Layer 2. 256 x 192 com 256 cores por pixel, sem color clash.
+	- Seleção do modo Timex no menu de boot
+	- Acerto no volume interno do EAR. Agora é possivel ouvir o retorno pela saída de áudio.
+.Todas as placas, exceto VTrucco e FBLabs
+	- Interface TurboSound Next. 3 x AY3-8910 e SID.
+.Específicas para Next e VTrucco
+	- Acertos no barramento externo. Maior suporte a interfaces.
+.Específicas para Next e Multicore
+	- Suporte a saída de video HDMI
+	- Suporte a sprites por hardware. 64 sprites 16 x 16 com 256 cores por pixel.
+.Específicas para Next
+	- Anti-Brick: O firmware pode ser sempre regravado a partir do SD, sem necessidade de precisar de um gravador no JTAG.
+	- Suporte a I2C. No momento usado apenas no Relógio em Tempo Real
+	- Suporte a comunicação serial. No momento usado apenas pelo módulo Wi-Fi
+	- Suporte a segundo cartão SD
+
+Versão 1.07:
+
+Versão 1.06:
+	- Adicionado os hardwares WXEDA e ZX-Uno
+	- Adicionado modo de video Radastan 128 x 192, 16 cores sem "color clash".
+	- Sistema de portas para configuração do hardware. Na porta 0x243B Seta o registro, enquanto a porta 0x253B pode ser escrita ou lida o valor do registro. Para maiores detalhes, veja o arquivo "New IO Ports.txt".
+	- Seleção de DAC para o hardware VTrucco

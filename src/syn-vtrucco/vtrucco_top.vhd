@@ -144,15 +144,15 @@ architecture behavior of vtrucco_top is
 	signal int_soft_reset_s	: std_logic;
 	signal reset_s				: std_logic;
 	signal s_db_reset			: std_logic; -- botao de reset com debounce
-	signal s_db_divmmc		: std_logic; -- botao da divmmc com debounce
-	signal s_db_m1				: std_logic; -- botao da multiface com debounce
+	signal s_db_divmmc_n		: std_logic; -- botao da divmmc com debounce
+	signal s_db_m1_n				: std_logic; -- botao da multiface com debounce
 
 	-- Memory buses
-	signal vram_a				: std_logic_vector(18 downto 0);
+	signal vram_a				: std_logic_vector(19 downto 0);
 	signal vram_dout			: std_logic_vector(7 downto 0);
 	signal vram_cs				: std_logic;
 	signal vram_oe				: std_logic;
-	signal ram_a				: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_a				: std_logic_vector(19 downto 0);
 	signal ram_din				: std_logic_vector(7 downto 0);
 	signal ram_dout			: std_logic_vector(7 downto 0);
 	signal ram_cs				: std_logic;
@@ -165,8 +165,8 @@ architecture behavior of vtrucco_top is
 	signal s_ear				: std_logic;
 	signal s_spk				: std_logic;
 	signal s_mic				: std_logic;
-	signal s_psg				: unsigned( 9 downto 0);
---	signal s_sid				: unsigned(17 downto 0);
+	signal s_psg_L				: unsigned( 7 downto 0);
+	signal s_psg_R				: unsigned( 7 downto 0);	
 	signal s_dac				: std_logic 							:= '0'; -- 0 = I2S, 1 = JAP
 
 	-- Keyboard
@@ -244,11 +244,11 @@ begin
 		usar_turbo		=> true,
 		num_maquina		=> X"06",		-- 6 = Vtrucco
 		versao			=> X"18",		-- 1.08
-		usar_kempjoy	=> '0',
-		usar_keyjoy		=> '0',
+		usar_kempjoy	=> '1',
+		usar_keyjoy		=> '1',
 		use_turbosnd_g	=> false,
-		use_overlay_g	=> true,
-		use_sprites_g	=> false
+		use_sid_g		=> false,
+		use_1024kb_g	=> false
 	)
 	port map (
 		-- Clock
@@ -265,8 +265,8 @@ begin
 		iKey50_60hz			=> FKeys_s(3),
 		iKeyScanDoubler	=> FKeys_s(2),
 		iKeyScanlines		=> FKeys_s(7),
-		iKeyDivMMC			=> FKeys_s(10) or (not s_db_divmmc),
-		iKeyM1				=> FKeys_s(9) or (not s_db_m1),
+		iKeyDivMMC			=> FKeys_s(10) or not s_db_divmmc_n,
+		iKeyMF				=> FKeys_s(9)  or not s_db_m1_n,
 		iKeyTurbo			=> FKeys_s(8),
 		iKeysHard			=> (others => '0'),
 
@@ -321,8 +321,10 @@ begin
 		iEAR					=>	s_ear,
 		oSPK					=>	s_spk,
 		oMIC					=>	s_mic,
-		oPSG					=>	s_psg,
-		oSID					=> open,
+		oPSG_L				=>	s_psg_L,
+		oPSG_R				=>	s_psg_R,
+		oSID_L				=> open,
+		oSID_R				=> open,
 		oDAC					=> s_dac,
 
 		-- Joystick
@@ -373,11 +375,6 @@ begin
 		oCpu_rfsh_n			=> open,
 		iCpu_iorqula		=> '0',
 
-		-- Overlay
-		oOverlay_addr		=> overlay_addr_s,
-		iOverlay_data		=> overlay_data_s,
-		pixel_clock_o		=> pixel_clock_s,
-
 		-- Debug
 		oD_leds				=> open,
 		oD_reg_o				=> open,
@@ -385,66 +382,30 @@ begin
 	);
 
 	-- SRAM AS7C34096-12 (-15)
---	ram : entity work.dpSRAM_5128
---	port map(
---		clk				=> clock_master,
---		-- Porta 0 = VRAM
---		porta0_addr		=> vram_a,
---		porta0_ce		=> vram_cs,
---		porta0_oe		=> vram_oe,
---		porta0_we		=> '0',
---		porta0_din		=> (others => '0'),
---		porta0_dout		=> vram_dout,
---		-- Porta 1 = Upper RAM
---		porta1_addr		=> ram_a,
---		porta1_ce		=> ram_cs,
---		porta1_oe		=> ram_oe,
---		porta1_we		=> ram_we,
---		porta1_din		=> ram_din,
---		porta1_dout		=> ram_dout,
---		-- Outputs to SRAM on board
---		sram_addr		=> sram_addr,
---		sram_data		=> sram_data,
---		sram_ce_n		=> open,
---		sram_oe_n		=> sram_oe_n,
---		sram_we_n		=> sram_we_n
---	);
-
-		ram : entity work.tpSRAM_5128
-		port map(
-			clk				=> clock_master,
-
-			-- Porta0 (VRAM)
-			porta0_addr		=> vram_a,
-			porta0_ce		=> vram_cs,
-			porta0_oe		=> vram_oe,
-			porta0_we		=> '0',
-			porta0_din		=> (others => '0'),
-			porta0_dout		=> vram_dout,
-
-			-- Porta1 (Upper RAM)
-			porta1_addr		=> ram_a,
-			porta1_ce		=> ram_cs,
-			porta1_oe		=> ram_oe,
-			porta1_we		=> ram_we,
-			porta1_din		=> ram_din,
-			porta1_dout		=> ram_dout,
-
-			-- Porta2 (Overlay)
-			porta2_addr		=> overlay_addr_s,
-			porta2_ce		=> not pixel_clock_s, --not clock_video,
-			porta2_oe		=> not pixel_clock_s, --not clock_video,
-			porta2_we		=> '0',
-			porta2_din		=> (others => '0'),
-			porta2_dout		=> overlay_data_s,
-
-			-- Outputs to SRAM on board
-			sram_addr		=> sram_addr,
-			sram_data		=> sram_data,
-			sram_ce_n		=> open,
-			sram_oe_n		=> sram_oe_n,
-			sram_we_n		=> sram_we_n
-		);
+	ram : entity work.dpSRAM_5128
+	port map(
+		clk				=> clock_master,
+		-- Porta 0 = VRAM
+		porta0_addr		=> vram_a(18 downto 0),
+		porta0_ce		=> vram_cs,
+		porta0_oe		=> vram_oe,
+		porta0_we		=> '0',
+		porta0_din		=> (others => '0'),
+		porta0_dout		=> vram_dout,
+		-- Porta 1 = Upper RAM
+		porta1_addr		=> ram_a(18 downto 0),
+		porta1_ce		=> ram_cs,
+		porta1_oe		=> ram_oe,
+		porta1_we		=> ram_we,
+		porta1_din		=> ram_din,
+		porta1_dout		=> ram_dout,
+		-- Outputs to SRAM on board
+		sram_addr		=> sram_addr,
+		sram_data		=> sram_data,
+		sram_ce_n		=> open,
+		sram_oe_n		=> sram_oe_n,
+		sram_we_n		=> sram_we_n
+	);
 
 	sound: entity work.Audio_TDA1543
 	port map (
@@ -452,7 +413,8 @@ begin
 		ear			=> s_ear,
 		spk			=> s_spk,
 		mic			=>	s_mic,
-		psg			=>	std_logic_vector(s_psg(7 downto 0)),
+		psg_L			=>	std_logic_vector(s_psg_L),
+		psg_R			=>	std_logic_vector(s_psg_R),
 		i2s_bclk		=> dac_bclk,
 		i2s_ws		=> dac_ws,
 		i2s_data		=> dac_dout,
@@ -469,11 +431,13 @@ begin
 		enable			=> not s_ps2,
 		clock				=> clock_master,
 		reset				=> poweron_s,
-		ps2_clk			=> ps2_clk,						-- Externo
-		ps2_data			=> ps2_data,					-- Externo
+		--
+		ps2_clk			=> ps2_clk,
+		ps2_data			=> ps2_data,
+		--
 		rows				=> kb_rows,
 		cols				=> kb_columns,
-		teclasF			=> FKeys_s
+		functionkeys_o	=> FKeys_s
 	);
 
 	-- debounce para botao de reset
@@ -489,7 +453,7 @@ begin
 	port map (
 		clk				=> clock_master,
 		button			=> NMI_DIVMMC,			-- input signal to be debounced
-		result			=> s_db_divmmc			-- debounced signal
+		result			=> s_db_divmmc_n			-- debounced signal
 	);
 
 		-- debounce para botao da multiface
@@ -497,7 +461,7 @@ begin
 	port map (
 		clk				=> clock_master,
 		button			=> NMI_MULTIFACE,	-- input signal to be debounced
-		result			=> s_db_m1			-- debounced signal
+		result			=> s_db_m1_n			-- debounced signal
 	);
 
 

@@ -15,7 +15,7 @@ echo Converting VTrucco
 call :convert vtrucco vtrucco vtrucco
 
 echo Converting ZXUno
-call :convert_xilinx zxuno zxuno_top zxuno
+call :convert_xilinx zxuno zxuno_top COREX.ZX1
 
 echo Converting Multicore
 call :convert Multicore multicore multicore
@@ -32,8 +32,8 @@ call :maketbu 5 fblabs
 echo Making TBBLUE.TBU for VTrucco
 call :maketbu 6 vtrucco
 
-echo Making TBBLUE.TBU for ZXUno
-call :maketbu 9 zxuno
+echo Copying COREX.ZX1 for ZXUno
+copy /y COREX.ZX1 ..\BINs\%2\%version%\
 
 echo Making TBBLUE.TBU for Multicore
 call :maketbu 11 multicore
@@ -51,7 +51,7 @@ IF ERRORLEVEL 1 GOTO error
 exit /b
 
 :convert_xilinx
-..\Utils\bit2bin ..\synth\%1\%2.bit %3.bin
+..\Utils\bit2bin ..\synth\%1\%2.bit %3
 IF ERRORLEVEL 1 GOTO error
 mkdir ..\BINs\%3\%version%
 copy /y ..\synth\%1\%2.bit ..\BINs\%3\%version%\%3.bit

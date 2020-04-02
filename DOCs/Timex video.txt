@@ -1,0 +1,78 @@
+Screen Modes
+The ULA used by the Timex machines provides a number of additional screen modes. These are controlled using Port 0xff. An unfortunate side effect of this is that a few games, like Arkanoid,
+ which expect reading 0xff to produce screen and ATTR data bytes when the ULA is reading the screen memory, will not work, since reading 0xff on the Timex returns the last byte sent to the port.
+ It is not known if this port is fully decoded but it seems likely that it is partially decoded, as on the Spectrum. Port 0xff is also used to enable/disable the timer interrupt and select
+ which bank of memory to use for the horizontal MMU. The byte to output will be interpreted thus:
+
+  Bits 0-2: Screen mode. 000=screen 0, 001=screen 1, 010=hi-colour, 110=hi-res
+  Bits 3-5: Sets the screen colour in hi-res mode.
+              000 - Black on White     100 - Green on Magenta
+              001 - Blue on Yellow     101 - Cyan on Red
+              010 - Red on Cyan        110 - Yellow on Blue
+              011 - Magenta on Green   111 - White on Black
+  Bit 6:    If set disables the generation of the timer interrupt.
+  Bit 7:    Selects which bank the horizontal MMU should use. 0=DOCK, 1=EX-ROM.
+
+
+Screen 0 is the normal screen at 0x4000. Screen 1 uses the same format but at 0x6000.
+
+The hi-colour screen uses the data area of screen 0 and screen 1 to create a 512x192 pixel screen. Columns are taken alternately from screen 0 and screen 1.
+The attribute area is not used. In this mode all colurs, including the BORDER, are BRIGHT, and the BORDER colour is the same as the PAPER colour.
+
+The multi-colour screen uses the data area of screen 0 for its data and the data area of screen 1 for its attributes, giving 2 colours per 8x1 pixel block.
+The attribute area is in the same byte order as the data area, which means MLT files, which have the attribute are in series, must be converted to be displayed.
+
+Bit 6 is the hardware equivalent of issuing a DI (disable interrupts) instruction in machine code, and is unaffected by the instruction EI (enable interrupts),
+ so should be used with caution. Bit 6 can be useful for getting ROM routines which normally enable interrupts to run slightly faster.
+
+With careful timing it is possible to mix screen modes so you could have a screen where the top half is hi-colour and the bottom half is hi-res - perfect for text adventures
+ with graphics. Using a similar technique it is also possible to have more than two colours on a hi-res screen. However, it is believed that no commercial software ever actually did this.
+
+ZX 48/128K:
+4000 — 57FF - Screen Memory the HiRes bitmap
+5800 — 5AFF - Screen Memory, the Colour Data. (Attribute memory)
+
+Video Resolutions / Screen Modes:
+Mode 1: 256x192 Pixels, 24 rows with 32 characters - Uses D_FILE_1 (Hex: 4000-57FF, Dec: 16384-22527) and A_FILE_1 (Hex: 5800-5AFF, Dec: 22528-23296)
+Mode 2: 512x192 Pixels, 24 rows with 64 characters. The INK colour is determined based on the PAPER colour selected. BRIGHT and FLASH are not supported.
+Mode 3: Operationally the same as Mode 1, but uses D_FILE_2 (Hex: 6000-77FF, Dec: 24576-30719) and A_FILE_2 (Hex: 7800-7AFF, Dec: 30720-31487) instead.
+Mode 4: 'Ultra High Color Resoluton' mode uses D_FILE_1 to define pixel data (as with Mode 1) but holds attribute values in D_FILE_2 - this contains 8 times
+ as much memory as A_FILE_1, allowing an attribute byte to be assigned to each row of pixels within each character.
+
+Normal:
+
+if bitmap_addr_s = '1' then
+	mem_addr_o <= vram_shadow_i & '1' & timex_pg_a & vc_std_v(7 downto 6) & vc_std_v(2 downto 0) & vc_std_v(5 downto 3) & ca_s;
+	mem_cs_o		<= '1';
+	mem_oe_o		<= not hc_s(0);
+elsif attr_addr_s = '1' then
+	if timex_hcl_a = '1' then																																		-- (cycles 9 and 13 load attr byte)
+		mem_addr_o	<= vram_shadow_i & "11" & vc_std_v(7 downto 6) & vc_std_v(2 downto 0) & vc_std_v(5 downto 3) & ca_s;
+	else
+		mem_addr_o	<= vram_shadow_i & '1' & timex_pg_a & "110" & vc_std_v(7 downto 3) & ca_s;
+	end if;
+
+-- Radastan mode enabled
+mem_addr_o <= vram_shadow_i & '1' & timex_pg_a & vc_std_v(7 downto 1) & (std_logic_vector(hcd_s(7 downto 2)));
+
+vram_a <= mem_addr_o
+oVram_a		<= "101" & vram_a;
+
+
+vram_en			<= '1' when cpu_mreq_n = '0' and cpu_a(15 downto 14) = "01" else '0';		-- Ativa leitura e escrita
+
+-- Mapa da RAM
+-- 0x000000 a 0x01FFFF (128K) DivMMC	RAM  				A18..16 = 000, 001
+-- 0x020000 a 0x03FFFF (128K) New VRAM 					A18..16 = 010, 011
+-- 0x040000 a 0x05FFFF (128K) para a RAM do Spectrum	A18..16 = 100, 101
+-- 0x060000 a 0x06FFFF  (64K) para ESXDOS e M1			A18..16 = 110
+-- 0x060000 - ESXDOS rom 	- A18..14 = 11000
+-- 0x064000 - M1 rom			- A18..14 = 11001
+-- 0x068000 - M1 extra rom	- A18..14 = 11010
+-- 0x06c000 - M1 ram			- A18..14 = 11011
+-- 0x070000 a 0x07FFFF  (64K) para a ROM do Spectrum	A18..16 = 111
+
+if vram_en = '1' then
+	ram_addr <= "10101" & cpu_a(13 downto 0);							-- VRAM access by CPU
+else	-- ram_en
+	ram_addr <= "10" & ram_page & cpu_a(13 downto 0);

@@ -76,6 +76,9 @@ entity zxula is
 		speaker_o		: out std_logic;
 		mic_o				: out std_logic;
 		kb_columns_i	: in  std_logic_vector(4 downto 0);
+		-- Raster int
+		rint_ctrl_i		: in  std_logic_vector(1 downto 0);
+		rint_line_i		: in  std_logic_vector(8 downto 0);
 		-- RGB
 		rgb_r_o			: out std_logic;
 		rgb_g_o			: out std_logic;
@@ -88,14 +91,10 @@ entity zxula is
 		rgb_hblank_o	: out std_logic;
 		rgb_vblank_o	: out std_logic;
 		i_sw				: in  std_logic							:= '0';
-		
-		--contadores Horizontal e vertical
+		-- Horizontal and vertical counters
 		hcount_o			: out unsigned(8 downto 0);
 		vcount_o			: out unsigned(8 downto 0);
-		pixel_clock_o 	: out std_logic;
-		-- Sprites
-		spt_hcount_o	: out unsigned(8 downto 0);
-		spt_vcount_o	: out unsigned(8 downto 0)
+		pixel_clock_o 	: out std_logic
 	);
 end entity;
 
@@ -184,8 +183,11 @@ architecture behave of zxula is
 
 	signal border_n_s					: std_logic;
 	signal port255_en_s				: std_logic;
+	signal port255_dis_en_s			: std_logic;
 	signal ear_s						: std_logic;
 	signal speaker_s					: std_logic;
+	signal mem_cs_s					: std_logic;
+	signal floatingbus_s				: std_logic_vector( 7 downto 0);
 
 	constant BHPIXEL_C				: integer 			:=  0;
 	constant EHPIXEL_C				: integer 			:=  255;
@@ -207,9 +209,8 @@ begin
 		hblank_n_o		=> hblank_n_s,
 		vblank_n_o		=> vblank_n_s,
 		int_n_o			=> vint_n_s,
-		-- Sprites
-		spt_hcount_o	=> spt_hcount_o,
-		spt_vcount_o	=> spt_vcount_o
+		rint_ctrl_i		=> rint_ctrl_i,
+		rint_line_i		=> rint_line_i
 	);
 
 	-- RAM palette
@@ -508,7 +509,7 @@ end generate;
 		if radas_en_s = '0' then
 			if bitmap_addr_s = '1' then
 				mem_addr_o <= vram_shadow_i & '1' & timex_pg_a & vc_std_v(7 downto 6) & vc_std_v(2 downto 0) & vc_std_v(5 downto 3) & ca_s;
-				mem_cs_o		<= '1';
+				mem_cs_s		<= '1';
 				mem_oe_o		<= not hc_s(0);
 			elsif attr_addr_s = '1' then
 				if timex_hcl_a = '1' then																																		-- (cycles 9 and 13 load attr byte)
@@ -516,26 +517,27 @@ end generate;
 				else
 					mem_addr_o	<= vram_shadow_i & '1' & timex_pg_a & "110" & vc_std_v(7 downto 3) & ca_s;
 				end if;
-				mem_cs_o		<= '1';
+				mem_cs_s		<= '1';
 				mem_oe_o		<= not hc_s(0);
 			else
 				mem_addr_o	<= (others => '0');
-				mem_cs_o		<= '0';
+				mem_cs_s		<= '0';
 				mem_oe_o		<= '0';
 			end if;
 		else
 			-- Radastan mode enabled
 			mem_addr_o <= vram_shadow_i & '1' & timex_pg_a & vc_std_v(7 downto 1) & (std_logic_vector(hcd_s(7 downto 2)));
 			if hc_s(1) = '0' then
-				mem_cs_o		<= '1';
+				mem_cs_s		<= '1';
 				mem_oe_o		<= not hc_s(0);
 			else
-				mem_cs_o		<= '0';
+				mem_cs_s		<= '0';
 				mem_oe_o		<= '0';
 			end if;
 		end if;
 	end process;
 
+	mem_cs_o <= mem_cs_s;
 
 	process (radas_en_s, hc_s, vc_s)
 	begin
@@ -594,7 +596,8 @@ end generate;
 	end process;
 
 	--
-	port255_en_s	<= '1' when cpu_iorq_n_i = '0' and cpu_addr_i(7 downto 0) = X"FF" and timex_en_i = '1'	else '0';		--
+	port255_en_s		<= '1' when cpu_iorq_n_i = '0' and cpu_addr_i(7 downto 0) = X"FF" and timex_en_i = '1'	else '0';		--
+	port255_dis_en_s	<= '1' when cpu_iorq_n_i = '0' and cpu_addr_i(7 downto 0) = X"FF" and timex_en_i = '0'	else '0';		--
 
 	-- Write in ports
 	process (reset_i, clk7_s)
@@ -617,10 +620,15 @@ end generate;
 	ear_s <= ear_i xor speaker_s;	-- Issue 3
 	speaker_o <= speaker_s;
 
+	-- Simulates floating-bus on I/O port 0xFF
+	--floatingbus_s <= mem_data_i when bitmap_addr_s = '1' or attr_addr_s = '1'	else (others => '1');
+	floatingbus_s <= mem_data_i when mem_cs_s = '1'	else (others => '1');
+
 	-- ULA-CPU interface
 	cpu_data_o <=
 					'1' & ear_s & '1' & kb_columns_i		when iocs_i = '1' and cpu_rd_n_i = '0'									else	-- CPU reads keyboard and EAR state
 					timex_reg_r									when port255_en_s = '1' and cpu_rd_n_i = '0'							else	-- Timex config port.
+					floatingbus_s								when port255_dis_en_s = '1' and cpu_rd_n_i = '0'					else	-- Floating Bus in FF port
 					'0' & enh_ula_addr_reg_s				when enh_ula_addr_portsel_s = '1' and cpu_rd_n_i = '0'			else	-- enh_ula addr register
 					"0000000" & enh_ula_soft_en_s			when enh_ula_data_portsel_s = '1' and cpu_rd_n_i = '0' and enh_ula_addr_reg_s(6) = '1'	else
 					enh_ula_pal_cpu_dout_s					when enh_ula_data_portsel_s = '1' and cpu_rd_n_i = '0' and enh_ula_addr_reg_s(6) = '0'	else
@@ -629,9 +637,9 @@ end generate;
 
 	has_data_o	<= '1' when iocs_i = '1'         		  and cpu_rd_n_i = '0'	else
 						'1' when port255_en_s = '1'           and cpu_rd_n_i = '0'	else
+						'1' when port255_dis_en_s = '1'       and cpu_rd_n_i = '0'	else
 						'1' when enh_ula_addr_portsel_s = '1' and cpu_rd_n_i = '0'	else
 						'1' when enh_ula_data_portsel_s = '1' and cpu_rd_n_i = '0'	else
---						'1' when bitmap_addr_s = '1' or attr_addr_s = '1'				else		-- Testing contention
 						'0';
 
 	-- 

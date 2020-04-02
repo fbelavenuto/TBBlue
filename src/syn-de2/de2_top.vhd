@@ -211,11 +211,11 @@ architecture behavior of de2_top is
 	signal reset_s				: std_logic;
 
 	-- Memory buses
-	signal vram_a				: std_logic_vector(18 downto 0);
+	signal vram_addr_s		: std_logic_vector(19 downto 0);
 	signal vram_dout			: std_logic_vector(7 downto 0);
 	signal vram_cs				: std_logic;
 	signal vram_oe				: std_logic;
-	signal ram_a				: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_a				: std_logic_vector(19 downto 0);
 	signal ram_din				: std_logic_vector(7 downto 0);
 	signal ram_dout			: std_logic_vector(7 downto 0);
 	signal ram_cs				: std_logic;
@@ -228,8 +228,10 @@ architecture behavior of de2_top is
 	signal s_ear				: std_logic;
 	signal s_spk				: std_logic;
 	signal s_mic				: std_logic;
-	signal s_psg				: unsigned( 9 downto 0);
-	signal s_sid				: unsigned(17 downto 0);
+	signal s_psg_L				: unsigned( 7 downto 0);
+	signal s_psg_R				: unsigned( 7 downto 0);
+	signal s_sid_L				: unsigned(17 downto 0);
+	signal s_sid_R				: unsigned(17 downto 0);
 
 	-- Keyboard
 	signal kb_rows				: std_logic_vector(7 downto 0);
@@ -303,12 +305,6 @@ architecture behavior of de2_top is
 	signal s_cpu_wr			: std_logic;
 	signal s_cpu_m1			: std_logic;
 	
-	-- overlay
-	signal vram_addr_s		: std_logic_vector(18 downto 0);
-	signal overlay_addr_s	: std_logic_vector(18 downto 0);
-	signal overlay_data_s	: std_logic_vector(7 downto 0);	
-	signal pixel_clock_s		: std_logic;
-
 begin
 
 	--------------------------------
@@ -339,8 +335,7 @@ begin
 		usar_kempjoy	=> '0',
 		usar_keyjoy		=> '0',
 		use_turbosnd_g	=> true,
-		use_overlay_g	=> true,
-		use_sprites_g	=> true
+		use_sid_g		=> true
 	)
 	port map (
 		-- Clock
@@ -358,7 +353,7 @@ begin
 		iKeyScanDoubler	=> FKeys_s(2),
 		iKeyScanlines		=> FKeys_s(7),
 		iKeyDivMMC			=> FKeys_s(10),
-		iKeyM1				=> FKeys_s(9),
+		iKeyMF				=> FKeys_s(9),
 		iKeyTurbo			=> FKeys_s(8),
 		iKeysHard			=> "00",
 
@@ -381,7 +376,7 @@ begin
 		oNTSC_PAL			=> open,
 
 		-- VRAM
-		oVram_a				=> vram_a,
+		oVram_a				=> vram_addr_s,
 		iVram_dout			=> vram_dout,
 		oVram_cs				=> vram_cs,
 		oVram_rd				=> vram_oe,
@@ -412,8 +407,10 @@ begin
 		iEAR					=> s_ear,
 		oSPK					=> s_spk,
 		oMIC					=> s_mic,
-		oPSG					=> s_psg,
-		oSID					=> s_sid,
+		oPSG_L				=> s_psg_L,
+		oPSG_R				=> s_psg_R,
+		oSID_L				=> s_sid_L,
+		oSID_R				=> s_sid_R,
 		oDAC					=> open,
 
 		-- Joystick
@@ -464,11 +461,6 @@ begin
 		oCpu_rfsh_n			=> open,
 		iCpu_iorqula		=> '0',
 
-		-- Overlay
-		oOverlay_addr		=> overlay_addr_s,
-		iOverlay_data		=> overlay_data_s,
-		pixel_clock_o		=> pixel_clock_s,
-
 		-- Debug
 		oD_leds				=> LEDR(7 downto 0),
 		oD_reg_o				=> open,
@@ -478,61 +470,23 @@ begin
 	clock_video <= not clk_14;
 	
 	-- SRAM IS61WV25616BLL (ou EDBLL)
---	ram : entity work.dpSRAM_25616
---	port map(
---		clk				=> clock_master,
---		-- Porta0 (VRAM)
---		porta0_addr		=> vram_addr_s,
---		porta0_ce		=> vram_cs,
---		porta0_oe		=> vram_oe,
---		porta0_we		=> '0',
---		porta0_din		=> (others => '0'),
---		porta0_dout		=> vram_dout,
---		-- Porta1 (Upper RAM)
---		porta1_addr		=> ram_a,
---		porta1_ce		=> ram_cs,
---		porta1_oe		=> ram_oe,
---		porta1_we		=> ram_we,
---		porta1_din		=> ram_din,
---		porta1_dout		=> ram_dout,
---		-- Outputs to SRAM on board
---		sram_addr		=> SRAM_ADDR,					-- SRAM on board address bus
---		sram_data		=> SRAM_DQ,						--	SRAM on board data bus
---		sram_ub			=> SRAM_UB_N,					--	SRAM on board /UB
---		sram_lb			=> SRAM_LB_N,					--	SRAM on board /LB
---		sram_ce_n		=> SRAM_CE_N,					--	SRAM on board /CE
---		sram_oe_n		=> SRAM_OE_N,					--	SRAM on board /OE
---		sram_we_n		=> SRAM_WE_N					--	SRAM on board /WE
---	);
-
-	ram : entity work.tpSRAM_25616
+	ram : entity work.dpSRAM_25616
 	port map(
 		clk				=> clock_master,
-		
 		-- Porta0 (VRAM)
-		porta0_addr		=> vram_a,
+		porta0_addr		=> vram_addr_s(18 downto 0),
 		porta0_ce		=> vram_cs,
 		porta0_oe		=> vram_oe,
 		porta0_we		=> '0',
 		porta0_din		=> (others => '0'),
 		porta0_dout		=> vram_dout,
-		
 		-- Porta1 (Upper RAM)
-		porta1_addr		=> ram_a,
+		porta1_addr		=> ram_a(18 downto 0),
 		porta1_ce		=> ram_cs,
 		porta1_oe		=> ram_oe,
 		porta1_we		=> ram_we,
 		porta1_din		=> ram_din,
 		porta1_dout		=> ram_dout,
-		
-		-- Porta2 (Overlay)
-		porta2_addr		=> overlay_addr_s,
-		porta2_ce		=> not pixel_clock_s, --not clock_video,
-		porta2_oe		=> not pixel_clock_s, --not clock_video,
-		porta2_we		=> '0',
-		porta2_din		=> (others => '0'),
-		porta2_dout		=> overlay_data_s,
-		
 		-- Outputs to SRAM on board
 		sram_addr		=> SRAM_ADDR,					-- SRAM on board address bus
 		sram_data		=> SRAM_DQ,						--	SRAM on board data bus
@@ -553,8 +507,10 @@ begin
 		ear			=> s_ear,
 		spk			=> s_spk,
 		mic			=>	s_mic,
-		psg			=>	s_psg,
-		sid_i			=> s_sid,
+		psg_L			=>	s_psg_L,
+		psg_R			=>	s_psg_R,
+		sid_L_i		=> s_sid_L,
+		sid_R_i		=> s_sid_R,
 
 		i2s_xck		=>	AUD_XCK,
 		i2s_bclk		=> AUD_BCLK,
@@ -578,11 +534,13 @@ begin
 		enable			=> '1',
 		clock				=> clock_master,
 		reset				=> poweron_s,
+		--
 		ps2_clk			=> PS2_CLK,
 		ps2_data			=> PS2_DAT,
+		--
 		rows				=> kb_rows,
 		cols				=> kb_columns,
-		teclasF			=> FKeys_s
+		functionkeys_o	=> FKeys_s
 	);
 
 	-- Mouse control

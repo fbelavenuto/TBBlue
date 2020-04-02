@@ -45,8 +45,10 @@ entity Audio_WM8731 is
 		ear			: out   std_logic;
 		spk			: in    std_logic;
 		mic			: in    std_logic;
-		psg			: in    unsigned( 9 downto 0);
-		sid_i			: in    unsigned(17 downto 0);
+		psg_L			: in    unsigned( 7 downto 0);
+		psg_R			: in    unsigned( 7 downto 0);
+		sid_L_i		: in    unsigned(17 downto 0);
+		sid_R_i		: in    unsigned(17 downto 0);
 		--
 		i2s_xck		: out   std_logic;
 		i2s_bclk		: out   std_logic;
@@ -68,13 +70,16 @@ architecture Behavior of Audio_WM8731 is
 	signal pcm_outr			: std_logic_vector(15 downto 0);
 	signal pcm_inl				: std_logic_vector(15 downto 0);
 
-	signal pcm_out_s			: std_logic_vector(15 downto 0);
+	signal pcm_out_L_s			: std_logic_vector(15 downto 0);
+	signal pcm_out_R_s			: std_logic_vector(15 downto 0);
 	signal ear_w				: std_logic;
 	signal spk_s				: std_logic_vector(15 downto 0);
 	signal mic_s				: std_logic_vector(15 downto 0);
 	signal ear_s				: std_logic_vector(15 downto 0);
-	signal psg_s				: std_logic_vector(15 downto 0);
-	signal sid_s				: std_logic_vector(15 downto 0);
+	signal psg_L_s				: std_logic_vector(15 downto 0);
+	signal psg_R_s				: std_logic_vector(15 downto 0);
+	signal sid_L_s				: std_logic_vector(15 downto 0);
+	signal sid_R_s				: std_logic_vector(15 downto 0);
 
 	constant spk_volume		: std_logic_vector(15 downto 0) := "0011000000000000";
 	constant mic_volume		: std_logic_vector(15 downto 0) := "0000100000000000";
@@ -145,19 +150,31 @@ begin
 	spk_s <= spk_volume when spk = '1' 								else (others => '0');
 	mic_s <= mic_volume when mic = '1' 								else (others => '0');
 	ear_s <= ear_volume when ear_w = '1' and feedback = '1' 	else (others => '0');
-	psg_s <= "0" & std_logic_vector(psg) & "00000";
-	sid_s <= "0" & std_logic_vector(sid_i(17 downto 3));
 
-	pcm_out_s	<= std_logic_vector(
+	psg_L_s <= "0" & std_logic_vector(psg_L) & "0000000";
+	psg_R_s <= "0" & std_logic_vector(psg_R) & "0000000";
+
+	sid_L_s <= "0" & std_logic_vector(sid_L_i(17 downto 3));
+	sid_R_s <= "0" & std_logic_vector(sid_R_i(17 downto 3));
+
+	pcm_out_L_s	<= std_logic_vector(
 							unsigned(spk_s) +
 							unsigned(mic_s) +
 							unsigned(ear_s) +
-							unsigned(psg_s) +
-							unsigned(sid_s)
+							unsigned(psg_L_s) +
+							unsigned(sid_L_s)
 						);
 
-	pcm_outl		<= pcm_out_s;
-	pcm_outr		<= pcm_out_s;
+	pcm_out_R_s	<= std_logic_vector(
+							unsigned(spk_s) +
+							unsigned(mic_s) +
+							unsigned(ear_s) +
+							unsigned(psg_R_s) +
+							unsigned(sid_R_s)
+						);
+
+	pcm_outl		<= pcm_out_L_s;
+	pcm_outr		<= pcm_out_R_s;
 
 	-- Hysteresis for EAR input (should help reliability)
 	process (clock)

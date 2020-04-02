@@ -48,7 +48,8 @@ entity Audio_TDA1543 is
 		ear			: in    std_logic;							-- Entrada 1 bit EAR
 		spk			: in    std_logic;							-- Entrada 1 bit Speaker
 		mic			: in    std_logic;							-- Entrada 1 bit MIC
-		psg			: in    std_logic_vector(7 downto 0);	-- Entrada 8 bits mono para o PSG
+		psg_L			: in    std_logic_vector(7 downto 0);	-- Entrada 8 bits para o PSG
+		psg_R			: in    std_logic_vector(7 downto 0);	-- Entrada 8 bits para o PSG
 
 		i2s_bclk		: out   std_logic;							-- Ligar nos pinos do TOP
 		i2s_ws		: out   std_logic;
@@ -67,7 +68,8 @@ architecture Behavior of Audio_TDA1543 is
 	signal spk_s				: std_logic_vector(15 downto 0);
 	signal mic_s				: std_logic_vector(15 downto 0);
 	signal ear_s				: std_logic_vector(15 downto 0);
-	signal psg_s				: std_logic_vector(15 downto 0);
+	signal psg_L_s				: std_logic_vector(15 downto 0);
+	signal psg_R_s				: std_logic_vector(15 downto 0);
 
 	constant spk_volume		: std_logic_vector(15 downto 0) := "0100000000000000";
 	constant mic_volume		: std_logic_vector(15 downto 0) := "0000100000000000";
@@ -92,10 +94,12 @@ begin
 	spk_s <= spk_volume when spk = '1' else (others => '0');
 	mic_s <= mic_volume when mic = '1' else (others => '0');
 	ear_s <= ear_volume when ear = '1' else (others => '0');
-	psg_s <=  psg & "00000000";
 
-	pcm_outl <= std_logic_vector(unsigned(spk_s) + unsigned(mic_s) + unsigned(ear_s) + unsigned(psg_s));
-	pcm_outr <= std_logic_vector(unsigned(spk_s) + unsigned(mic_s) + unsigned(ear_s) + unsigned(psg_s));
+	psg_L_s <=  psg_L & "00000000";
+	psg_R_s <=  psg_R & "00000000";
+
+	pcm_outl <= std_logic_vector(unsigned(spk_s) + unsigned(mic_s) + unsigned(ear_s) + unsigned(psg_L_s));
+	pcm_outr <= std_logic_vector(unsigned(spk_s) + unsigned(mic_s) + unsigned(ear_s) + unsigned(psg_R_s));
 
 	-- Dividir clock
 	process(clock)

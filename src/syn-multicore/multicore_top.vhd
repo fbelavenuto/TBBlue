@@ -42,7 +42,7 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
  
 entity multicore_top is
 	generic (
-		hdmi_output_g		: boolean	:= true
+		hdmi_output_g		: boolean	:= false
 	);
 	port (
 		-- Clocks
@@ -138,11 +138,11 @@ architecture behavior of multicore_top is
 	signal reset_s				: std_logic;
 
 	-- Memory buses
-	signal vram_addr_s		: std_logic_vector(18 downto 0);
+	signal vram_addr_s		: std_logic_vector(19 downto 0);
 	signal vram_dout_s		: std_logic_vector(7 downto 0);
 	signal vram_cs_s			: std_logic;
 	signal vram_oe_s			: std_logic;
-	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_addr_s			: std_logic_vector(19 downto 0);
 	signal ram_din_s			: std_logic_vector(7 downto 0);
 	signal ram_dout_s			: std_logic_vector(7 downto 0);
 	signal ram_cs_s			: std_logic;
@@ -150,14 +150,17 @@ architecture behavior of multicore_top is
 	signal ram_we_s			: std_logic;
 	signal rom_addr_s			: std_logic_vector(13 downto 0);		-- 16K
 	signal rom_data_s			: std_logic_vector(7 downto 0);
-
+	
 	-- Audio
 	signal spk_s				: std_logic;
 	signal mic_s				: std_logic;
-	signal psg_s				: unsigned( 9 downto 0);
-	signal sid_s				: unsigned(17 downto 0);
+	signal psg_L_s				: unsigned( 7 downto 0);
+	signal psg_R_s				: unsigned( 7 downto 0);
+	signal sid_L_s				: unsigned(17 downto 0);
+	signal sid_R_s				: unsigned(17 downto 0);
 	signal tapein_s			: std_logic_vector(7 downto 0);
-	signal pcm_out_s			: std_logic_vector(13 downto 0);
+	signal pcm_out_L_s		: std_logic_vector(13 downto 0);
+	signal pcm_out_R_s		: std_logic_vector(13 downto 0);
 
 	-- Keyboard
 	signal kb_rows_s			: std_logic_vector(7 downto 0);
@@ -179,10 +182,6 @@ architecture behavior of multicore_top is
 	-- Joystick
 	signal joy1_s				: std_logic_vector(5 downto 0);
 	signal joy2_s           : std_logic_vector(5 downto 0);
-
-	-- Keys
-	signal key_divmmc_s		: std_logic;
-	signal key_mface_s		: std_logic;
 
 	-- Video and scandoubler
 	signal rgb_r_s				: std_logic_vector(2 downto 0);
@@ -207,11 +206,6 @@ architecture behavior of multicore_top is
 	signal tdms_b_s			: std_logic_vector( 9 downto 0);
 	signal hdmi_p_s			: std_logic_vector( 3 downto 0);
 	signal hdmi_n_s			: std_logic_vector( 3 downto 0);
-
-	-- overlay
-	signal overlay_addr_s	: std_logic_vector(18 downto 0);
-	signal overlay_data_s	: std_logic_vector(7 downto 0);	
-	signal pixel_clock_s		: std_logic;
 	
 	signal blank_s		: std_logic;
 
@@ -233,15 +227,14 @@ begin
 	-- The TBBlue
 	tbblue1 : entity work.tbblue
 	generic map (
-		usar_turbo		=> false,
+		usar_turbo		=> true,
 		num_maquina		=> X"0B",		-- 11 = VTrucco Multicore
 		versao			=> X"18",		-- 1.08
-		usar_kempjoy	=> '0',
-		usar_keyjoy		=> '0',
-		use_turbosnd_g	=> true,
-		use_overlay_g	=> true,
-		use_sprites_g	=> false,
-		use_sid_g		=> true
+		usar_kempjoy	=> '1',
+		usar_keyjoy		=> '1',
+		use_turbosnd_g	=> false,
+		use_sid_g		=> false,
+		use_1024kb_g	=> false
 	)
 	port map (
 		-- Clock
@@ -258,8 +251,8 @@ begin
 		iKey50_60hz			=> FKeys_s(3),
 		iKeyScanDoubler	=> FKeys_s(2),
 		iKeyScanlines		=> FKeys_s(7),
-		iKeyDivMMC			=> key_divmmc_s,
-		iKeyM1				=> key_mface_s,
+		iKeyDivMMC			=> FKeys_s(10) or not btn_n_i(2),
+		iKeyMF				=> FKeys_s(9)  or not btn_n_i(3),
 		iKeyTurbo			=> FKeys_s(8),
 		iKeysHard			=> "00",
 
@@ -313,8 +306,10 @@ begin
 		iEAR					=> ear_i,
 		oSPK					=> spk_s,
 		oMIC					=> mic_s,
-		oPSG					=> psg_s,
-		oSID					=> sid_s,
+		oPSG_L				=> psg_L_s,
+		oPSG_R				=> psg_R_s,
+		oSID_L				=> sid_L_s,
+		oSID_R				=> sid_R_s,
 		oDAC					=> open,
 
 		-- Joystick
@@ -365,24 +360,19 @@ begin
 		oCpu_rfsh_n			=> open,
 		iCpu_iorqula		=> '0',
 		
-		-- Overlay
-		oOverlay_addr		=> overlay_addr_s,
-		iOverlay_data		=> overlay_data_s,
-		pixel_clock_o		=> pixel_clock_s,
-
 		--Debug
 		oD_leds				=> open,
 		oD_reg_o				=> open,
 		oD_others			=> open
 	);
-
+		
 	-- SRAM AS7C34096-10
-	ram : entity work.dpSRAM_5128
+	ram : entity work.dpSRAM_2x512x8
 	port map(
 		clk					=> clock_master_s,
 		-- Porta 0 = VRAM
 		porta0_addr			=> vram_addr_s,
-		porta0_ce			=> vram_cs_s,
+		porta0_ce			=> ram_cs_s,
 		porta0_oe			=> vram_oe_s,
 		porta0_we			=> '0',
 		porta0_din			=> (others => '0'),
@@ -397,7 +387,7 @@ begin
 		-- Outputs to SRAM on board
 		sram_addr			=> sram_addr_o,
 		sram_data			=> sram_data_io,
-		sram_ce_n			=> sram_ce_n_o(0),
+		sram_ce_n			=> sram_ce_n_o,
 		sram_oe_n			=> sram_oe_n_o,
 		sram_we_n			=> sram_we_n_o
 	);
@@ -412,11 +402,13 @@ begin
 		enable			=> '1',
 		clock				=> clock_master_s,
 		reset				=> poweron_s,
+		--
 		ps2_clk			=> ps2_clk_io,
 		ps2_data			=> ps2_data_io,
+		--
 		rows				=> kb_rows_s,
 		cols				=> kb_columns_s,
-		teclasF			=> FKeys_s
+		functionkeys_o	=> FKeys_s
 	);
 	
 	-- Mouse control
@@ -514,11 +506,14 @@ begin
 		ear_i		=> ear_i,
 		spk_i		=> spk_s,
 		mic_i		=> mic_s,
-		psg_i		=> psg_s,
-		sid_i		=> sid_s,
+		psg_L_i	=> psg_L_s,
+		psg_R_i	=> psg_R_s,
+		sid_L_i	=> sid_L_s,
+		sid_R_i	=> sid_R_s,
 		dac_r_o	=> dac_r_o,
 		dac_l_o	=> dac_l_o,
-		pcm_o		=> pcm_out_s
+		pcm_L_o	=> pcm_out_L_s,
+		pcm_R_o	=> pcm_out_R_s
 	);
 
 	-- EPCS4
@@ -540,10 +535,6 @@ begin
 	-- SD
 	sd_mosi_o	<= spi_mosi_s;
 	sd_sclk_o	<= spi_sclk_s;
-
-	-- keys
-	key_divmmc_s	<= FKeys_s(10) or not btn_n_i(2);
-	key_mface_s		<= FKeys_s(9)  or not btn_n_i(3);
 
 	-- Audio
 	mic_o		<= mic_s;
@@ -574,8 +565,8 @@ begin
 			I_VSYNC			=> vsync_out_s,
 			-- PCM audio
 			I_AUDIO_ENABLE	=> '1',
-			I_AUDIO_PCM_L 	=> pcm_out_s & "00",
-			I_AUDIO_PCM_R	=> pcm_out_s & "00",
+			I_AUDIO_PCM_L 	=> pcm_out_L_s & "00",
+			I_AUDIO_PCM_R	=> pcm_out_R_s & "00",
 			-- TMDS parallel pixel synchronous outputs (serialize LSB first)
 			O_RED				=> tdms_r_s,
 			O_GREEN			=> tdms_g_s,

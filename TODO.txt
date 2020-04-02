@@ -1,0 +1,5 @@
+ - Check if has space to:
+  - Keymap changeable (a37dcf59c704874769b85243e3812be39867de0b, d657787c52ae33ae35a1f9035400c918e833ef9b,8c0bd4f5f6c89cbf58b566a183be33f2464a612d, 70ddf569878e21d890c274784be0194c6d31a018)
+  - EDITOR change (separate options) (e5d069627cef285316163fc9d5182f5b9b24c863, 90c5c25b66960e10520cbd6fb4c50c5a45ba65b8)
+  - Check Pentagon mode (799721aa64eae2db8c0fcc3dcde8e6f3c301e0eb)
+ - Check Floating BUS

@@ -175,6 +175,7 @@ set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to joy2_up_i
 set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
 set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
 set_global_assignment -name FITTER_EFFORT "FAST FIT"
+set_global_assignment -name SEED 4
 set_global_assignment -name VHDL_FILE "../../src/syn-multicore/multicore_top.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-multicore/pll1.qip"
 set_global_assignment -name VHDL_FILE ../../src/tbblue.vhd
@@ -188,20 +189,17 @@ set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram2.vhd
 set_global_assignment -name VHDL_FILE ../../src/rom/bootrom.vhd
+set_global_assignment -name VHDL_FILE ../../src/shared/dpSRAM_2x512x8.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/keymaps.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/keyboard.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/ps2_iobase.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/io_ps2_keyboard.vhd
-set_global_assignment -name VHDL_FILE ../../src/shared/dpSRAM_5128.vhd
-set_global_assignment -name VHDL_FILE ../../src/shared/tpSRAM_5128.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/Audio_DAC.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/dac.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/zxula.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/zxula_timing.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/scandoubler.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/scan_converter.vhd
-set_global_assignment -name VHDL_FILE ../../src/video/overlay.vhd
-set_global_assignment -name VHDL_FILE ../../src/sprites/sprites.vhd
 set_global_assignment -name VHDL_FILE ../../src/hdmi/hdmi.vhd
 set_global_assignment -name VHDL_FILE ../../src/hdmi/hdmidelay.vhd
 set_global_assignment -name VHDL_FILE ../../src/hdmi/encoder.vhd
@@ -221,6 +219,7 @@ set_global_assignment -name VHDL_FILE ../../src/audio/YM2149_volmix.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/sid/NextSID.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/sid/sid6581.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/sid/sid_voice.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/sid/sid_filters.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/sid/sid_coeffs.vhd
 set_global_assignment -name SDC_FILE multicore.out.sdc
-set_global_assignment -name SEED 4
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -1,0 +1,161 @@
+
+Pentagon 128 kB ond ZX Spectrum 128 / +2
+port 7FFD: (adressation 0xxxxxxx xxxxxx0x )
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = unused
+D7 = unused
+
+Pentagon 512 kB
+port 7FFD: (adressation 0xxxxxxx xxxxxx0x )
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = bank 3 ;256 kB memory
+D7 = bank 4 ;512 kB memory
+
+Pentagon 1024 kB
+port 7FFD: (adressation 01xxxxxx xxxxxx0x )
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = bank 5 ;1024 kB memory (if D2 of port EFF7=0)
+D6 = bank 3 ;256 kB memory
+D7 = bank 4 ;512 kB memory
+port EFF7: (adressation 1110xxxx xxxx0xxx )
+D2 = 1 - set 128 kB mode
+0 - enable 1MB memory
+(if D2 of port EFF7=1 then D5 of port 7FFD is used for disable paging)
+D3 = 1 - disable rom and connect ram page 0 in adress space 0-3FFF
+
+ZX Spectrum 128+2A / +3
+port 7FFD: (adressation 01xxxxxx xxxxxx0x )
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = unused
+D7 = unused
+port 1FFD: (adressation 0001xxxx xxxxxx0x )
+D0 = 1 - disable rom and allram mode
+D1 and D2 set layout of ram pages if allram is set (see +3 manual)
+
+Scorpion 256 kB
+port 7FFD: (adressation - 01xxxxxx xx1xxx01 )
+(adressation in REALSPECTRUM emul is also different ) 
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = unused
+D7 = unused
+port 1FFD: (adressation - 00xxxxxx xx1xxx01 )
+D0 = 1 - disable rom and connect ram page 0 in adress space 0-3FFF 
+(UNREAL SPECCY emulator set after OUT 1FFD,1 ram page 0 to low 16kB, but REALSPECTRUM emulator set ram page 8 to low 16kB  )
+D4 = bank 3 ;256 kB memory
+D6 = unused
+D7 = unused
+
+Scorpion 1024 kB
+port 7FFD: (adressation - 01xxxxxx xx1xxx01 )
+(adressation in REALSPECTRUM emul is also different ) 
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = unused
+D7 = unused
+port 1FFD: (adressation - 00xxxxxx xx1xxx01 )
+D0 = 1 - disable rom and connect ram page 0 in adress space 0-3FFF
+D4 = bank 3 ;256 kB memory
+D6 = bank 4 ;512 kB memory
+D7 = bank 5 ;1024 kB memory
+
+KAY 256 kB - ( compatible with SCORPION 256kB )
+port 7FFD: (adressation - 01xxxxxx xxxxxx01 )
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = unused
+D7 = unused
+port 1FFD: (adressation - 00xxxxxx xxxxxx01 )
+D0 = 1 - disable rom and connect ram page 0 in adress space 0-3FFF
+D4 = bank 3 ;256 kB memory
+
+KAY 1024 kB
+port 7FFD: (adressation - 01xxxxxx xxxxxx01 )
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = unused
+D7 = bank 5 ;1024 kB memory
+port 1FFD: (adressation - 00xxxxxx xxxxxx01 )
+D0 = 1 - disable rom and connect ram page 0 in adress space 0-3FFF
+D4 = bank 3 ;256 kB memory
+D7 = bank 4 ;512 kB memory
+
+ZX PROFI 1024 kB
+port 7FFD: (adressation - 0xxxxxxx xxxxxx0x )
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = unused
+D7 = unused
+port DFFD: (adressation - xx0xxxxx xxxxxx0x )
+D0 = bank 3 ;256 kB memory
+D1 = bank 4 ;512 kB memory
+D2 = bank 5 ;1024 kB memory
+
+ATM 1 512 kB
+port 7FFD: (adressation  )
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = unused
+D7 = unused
+port FDFD:
+D0 = bank 3 ;256 kB memory
+D1 = bank 4 ;512 kB memory
+D2 = unused
+
+ATM 1 1024 kB
+port 7FFD: (adressation  )
+D0 = bank 0 ;128 kB memory
+D1 = bank 1 ;128 kB memory
+D2 = bank 2 ;128 kB memory
+D3 = videoram
+D4 = rom
+D5 = disable paging
+D6 = unused
+D7 = unused
+port FDFD:
+D0 = bank 3 ;256 kB memory
+D1 = bank 4 ;512 kB memory
+D2 = bank 5 ;1024 kB memor

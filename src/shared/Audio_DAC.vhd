@@ -48,23 +48,29 @@ entity Audio_DAC is
 		ear_i		: in    std_logic;
 		spk_i		: in    std_logic;
 		mic_i		: in    std_logic;
-		psg_i		: in    unsigned( 9 downto 0);
-		sid_i		: in    unsigned(17 downto 0);
+		psg_L_i	: in    unsigned( 7 downto 0);
+		psg_R_i	: in    unsigned( 7 downto 0);
+		sid_L_i	: in    unsigned(17 downto 0);
+		sid_R_i	: in    unsigned(17 downto 0);
 		dac_r_o	: out   std_logic;
 		dac_l_o	: out   std_logic;
-		pcm_o    : out   std_logic_vector(13 downto 0)
+		pcm_L_o  : out   std_logic_vector(13 downto 0);
+		pcm_R_o  : out   std_logic_vector(13 downto 0)
 	);
 end entity;
 
 architecture Behavior of Audio_DAC is
 
 	signal reset_n_s			: std_logic;
-	signal pcm_out_s			: std_logic_vector(13 downto 0);
+	signal pcm_out_L_s		: std_logic_vector(13 downto 0);
+	signal pcm_out_R_s		: std_logic_vector(13 downto 0);
 	signal spk_s				: std_logic_vector(13 downto 0);
 	signal mic_s				: std_logic_vector(13 downto 0);
 	signal ear_s				: std_logic_vector(13 downto 0);
-	signal psg_s				: std_logic_vector(13 downto 0);
-	signal sid_s				: std_logic_vector(13 downto 0);
+	signal psg_L_s				: std_logic_vector(13 downto 0);
+	signal psg_R_s				: std_logic_vector(13 downto 0);
+	signal sid_L_s				: std_logic_vector(13 downto 0);
+	signal sid_R_s				: std_logic_vector(13 downto 0);
 	constant spk_volume_c	: std_logic_vector(13 downto 0) := "01000000000000";
 	constant mic_volume_c	: std_logic_vector(13 downto 0) := "00010000000000";
 	constant ear_volume_c	: std_logic_vector(13 downto 0) := "00001000000000";
@@ -80,7 +86,7 @@ begin
 	port map (
 		clk_i		=> clock_i,
 		res_n_i	=> reset_n_s,
-		dac_i		=> pcm_out_s,
+		dac_i		=> pcm_out_L_s,
 		dac_o		=> dac_l_o
 	);
 
@@ -91,24 +97,37 @@ begin
 	port map (
 		clk_i		=> clock_i,
 		res_n_i	=> reset_n_s,
-		dac_i		=> pcm_out_s,
+		dac_i		=> pcm_out_R_s,
 		dac_o		=> dac_r_o
 	);
 
 	spk_s <= spk_volume_c when spk_i = '1' else (others => '0');
 	mic_s <= mic_volume_c when mic_i = '1' else (others => '0');
 	ear_s <= ear_volume_c when ear_i = '1' else (others => '0');
-	psg_s <= std_logic_vector(psg_i) & "0000";
-	sid_s	<= "0" & std_logic_vector(sid_i(17 downto 5));
+	
+	psg_L_s <= "00" & std_logic_vector(psg_L_i) & "0000";
+	psg_R_s <= "00" & std_logic_vector(psg_R_i) & "0000";
+	
+	sid_L_s <= "0" & std_logic_vector(sid_L_i(17 downto 5));
+	sid_R_s <= "0" & std_logic_vector(sid_R_i(17 downto 5));
 
-	pcm_out_s <= std_logic_vector(
+	pcm_out_L_s <= std_logic_vector(
 						unsigned(spk_s) + 
 						unsigned(mic_s) + 
 						unsigned(ear_s) + 
-						unsigned(psg_s) +
-						unsigned(sid_s)
+						unsigned(psg_L_s) +
+						unsigned(sid_L_s)
 					);
 
-	pcm_o <= pcm_out_s;
+	pcm_out_R_s <= std_logic_vector(
+						unsigned(spk_s) + 
+						unsigned(mic_s) + 
+						unsigned(ear_s) + 
+						unsigned(psg_R_s) +
+						unsigned(sid_R_s)			
+					);
+
+	pcm_L_o <= pcm_out_L_s;
+	pcm_R_o <= pcm_out_R_s;
 					
 end architecture;

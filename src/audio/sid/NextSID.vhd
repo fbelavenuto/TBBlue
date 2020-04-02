@@ -84,8 +84,8 @@ begin
 	-- write register address
 	process (cs_i)
 	begin
-		if falling_edge(cs_i) then
-			if addr_i = '0' and wr_i = '1' then
+		if falling_edge(clock_i) then
+			if cs_i = '1' and addr_i = '0' and wr_i = '1' then
 				sid_addr_s <= data_i(4 downto 0);
 			end if;
 		end if;

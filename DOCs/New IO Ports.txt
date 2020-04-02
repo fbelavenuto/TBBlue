@@ -5,66 +5,69 @@ New register system:
 243B - Set register #
 253B - Set/read value
 
-
 Registers:
 (R)	00 => Machine ID
 (R)	01 => Version (Nibble most significant = Major, Nibble less significant = Minor)
 (R/W)	02 => Reset:
 		bits 7-3 = Reserved, must be 0
-		bit 2 = (R) Power-on reset
-		bit 1 = (R/W) if 1 Hard Reset
-		bit 0 = (R/W) if 1 Soft Reset
-(W)	03 => Set machine type, only in bootrom or config mode:
-		A write in this register disables the bootrom mode (0000 to 3FFF are mapped to the RAM instead of the internal ROM)
+		bit 2 = (R) Power-on reset (PoR)
+		bit 1 = (R/W) Reading 1 indicates a Hard-reset. If written 1 causes a Hard Reset.
+		bit 0 = (R/W) Reading 1 indicates a Soft-reset. If written 1 causes a Soft Reset.
+(W)	03 => Set machine type, only in IPL or config mode:
+		A write in this register disables the IPL mode (0000 to 3FFF are mapped to the RAM instead of the internal ROM)
 		bits 7-5 = Reserved, must be 0
 		bits 4-3 = Timing:
-			00,
-			01 = ZX 48K
+			00 or 01 = ZX 48K
 			10 = ZX 128K
 			11 = ZX +2/+3e
 		bit 2 = Reserved, must be 0
 		bits 1-0 = Machine type:
-			00 = Config mode (bootrom)
+			00 = Config mode
 			01 = ZX 48K
 			10 = ZX 128K
 			11 = ZX +2/+3e
-(W)	04 => Set page RAM, only in config mode (no bootrom):
-		bits 7-5 = Reserved, must be 0
-		bits 4-0 = RAM page mapped in 0000-3FFF (32 pages of 16K = 512K)
-(R/W)	05 => Peripheral 1 setting, only in bootrom or config mode:
-		bits 7-6 = (W) joystick 1 mode (00 = Sinclair, 01 = Kempston, 10 = Cursor)
-		bits 5-4 = (W) joystick 2 mode (same as joy1)
-		bit 3 = (W) Enable Enhaced ULA (1 = enabled)
-		bit 2 = (R/W) 50/60 Hz mode (0 = 50Hz, 1 = 60Hz)
-		bit 1 = (R/W) Enable Scanlines (1 = enabled)
-		bit 0 = (R/W) Enable Scandoubler (1 = enabled)
-(W)	06 => Peripheral 2 setting, only in bootrom or config mode:
-		bit 7 = Enable turbo mode (0 = disabled, 1 = enabled)
-		bit 6 = DAC chip mode (0 = I2S, 1 = JAP)
-		bit 5 = Enable Lightpen  (1 = enabled)
-		bit 4 = Enable DivMMC (1 = enabled)
-		bit 3 = Enable Multiface (1 = enabled)
-		bit 2 = PS/2 mode (0 = keyboard, 1 = mouse)
+(W)	04 => Set page RAM, only in config mode (no IPL):
+		bits 7-6 = Reserved, must be 0
+		bits 5-0 = RAM page mapped in 0000-3FFF (64 pages of 16K = 1024K, Reset to 0 after a PoR or Hard-reset)
+(R/W)	05 => Peripheral 1 setting:
+		bits 7-6 = joystick 1 mode (00 = Sinclair, 01 = Kempston, 10 = Cursor)(Reset to 0 after a PoR or Hard-reset)
+		bits 5-4 = joystick 2 mode (same as joy1)(Reset to 0 after a PoR or Hard-reset)
+		bit 3 = Enable Enhaced ULA (1 = enabled)(Reset to 0 after a PoR or Hard-reset)
+		bit 2 = 50/60 Hz mode (0 = 50Hz, 1 = 60Hz)(Reset to 0 after a PoR or Hard-reset)
+		bit 1 = Enable Scanlines (1 = enabled)(Reset to 0 after a PoR or Hard-reset)
+		bit 0 = Enable Scandoubler (1 = enabled)(Reset to 1 after a PoR or Hard-reset)
+(R/W)	06 => Peripheral 2 setting:
+		bit 7 = Enable turbo mode (0 = disabled, 1 = enabled)(Reset to 0 after a PoR or Hard-reset)
+		bit 6 = DAC chip mode (0 = I2S, 1 = JAP)(Reset to 0 after a PoR or Hard-reset)
+		bit 5 = Enable Lightpen  (1 = enabled)(Reset to 0 after a PoR or Hard-reset)
+		bit 4 = Enable DivMMC (1 = enabled)(Reset to 0 after a PoR or Hard-reset)
+		bit 3 = Enable Multiface (1 = enabled)(Reset to 0 after a PoR or Hard-reset)
+		bit 2 = PS/2 mode (0 = keyboard, 1 = mouse)(Reset to 0 after a PoR or Hard-reset)
 		bits 1-0 = Audio chip mode (0- = disabled, 10 = YM, 11 = AY)
 (R/W)	07 => Turbo mode:
-		bit 0 = Turbo (0 = 3.5MHz, 1 = 7MHz)
-(W)	08 => Peripheral 3 setting, only in bootrom or config mode:
-		bits 7-3 = Reserved, must be 0
-		bit 2 = Enable Timex modes (1 = enabled)
-		bit 1 = Enable TurboSound (1 = enabled)
-		bit 0 = NTSC/PAL for ZX-Uno (0 = NTSC)
+		bit 0 = Turbo (0 = 3.5MHz, 1 = 7MHz)(Reset to 0 after a PoR or Hard-reset)
+(R/W)	08 => Peripheral 3 setting:
+		bits 7-6 = Reserved, must be 0
+		bit 5 = Stereo mode (0 = ABC, 1 = ACB)(Reset to 0 after a PoR or Hard-reset)
+		bit 4 = Reserved, must be 0
+		bit 3 = Reserved, must be 0
+		bit 2 = Enable Timex modes (1 = enabled)(Reset to 0 after a PoR or Hard-reset)
+		bit 1 = Enable TurboSound (1 = enabled)(Reset to 0 after a PoR or Hard-reset)
+		bit 0 = NTSC/PAL for ZX-Uno (0 = NTSC)(Reset to 0 after a PoR or Hard-reset)
 
-(R/W)	20 => Layer 2 transparency color
-		bits 7-4 = Reserved, must be 0
-		bits 3-0 = ULA transparency color (IGRB)
-(R/W)	21 => Sprite system
-		bits 7-2 = Reserved, must be 0
-		bit 1 = Over border (1 = yes)
-		bit 0 = Sprites visible (1 = visible)
-(R/W)	22 => Layer2 Offset X
-		bits 7-0 = X Offset (0-255)
-(R/W)	23 => Layer2 Offset Y
-		bist 7-6 = Reserved, must be 0
-		bits 5-0 = Y Offset (0-63)
+(R)	30 => Raster video line (MSB)
+		bits 7-1 = Reserved, always 0
+		bit 0 = Raster line MSB (Reset to 0 after a reset)
+(R)	31 = Raster video line (lower)
+		bits 7-0 = Raster line LSB (0-255)(Reset to 0 after a reset)
+
+(R/W)	34 => Raster line interrupt control
+		bit 7 = (R) INT flag, 1=During INT (even if the processor has interrupt disabled)
+		bits 6-3 = Reserved, must be 0
+		bit 2 = If 1 disables original ULA interrupt
+		bit 1 = If 1 enables Raster line interrupt
+		bit 0 = MSB of Raster line interrupt value
+(R/W)	35 => Raster line interrupt value LSB
+		bits 7-0 = Raster line value LSB (0-255)(Reset to 0 after a reset)
 
 (W)	FF => Debug LEDs (DE-1 and DE-2 only)

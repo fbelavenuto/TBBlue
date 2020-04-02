@@ -59,7 +59,7 @@ void main()
 {
 	unsigned char *mem   = (unsigned char *)0x6000;
 	unsigned char module, have_tbu, have_update;
-	unsigned char mach_id, mach_version, reset_type, buttons;
+	unsigned char mach_id, mach_version, reset_type;
 	unsigned int c = 0, initial_block, blocks;
 	fileTYPE file;
 
@@ -71,8 +71,6 @@ void main()
 	mach_version = REG_VAL;
 	REG_NUM = REG_RESET;
 	reset_type = REG_VAL & RESET_POWERON;
-	REG_NUM = REG_ANTIBRICK;
-	buttons = REG_VAL & (AB_BTN_DIVMMC | AB_BTN_MULTIFACE);
 
 	vdp_init();
 	vdp_gotoxy(11, 0);
@@ -106,16 +104,6 @@ void main()
 	}
 	if ((HROW5 & 0x08) == 0) {			// u key pressed
 		have_update = 1;
-	}
-	// If anti-brick core
-	if (mach_id == HWID_ZXNEXT_AB) {
-		if (buttons == (AB_BTN_DIVMMC | AB_BTN_MULTIFACE)) {
-			have_update = 1;
-		} else {
-			REG_NUM = REG_ANTIBRICK;
-			REG_VAL = AB_CMD_NORMALCORE;		// Load normal core
-			for(;;);
-		}
 	}
 	if (!FileOpen(&file, fn_firmware)) {
 		//             01234567890123456789012345678901

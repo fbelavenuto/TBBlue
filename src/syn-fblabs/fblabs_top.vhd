@@ -140,11 +140,11 @@ architecture behavior of fblabs_top is
 	signal reset_s				: std_logic;
 
 	-- Memory buses
-	signal vram_a				: std_logic_vector(18 downto 0);
+	signal vram_a				: std_logic_vector(19 downto 0);
 	signal vram_dout			: std_logic_vector(7 downto 0);
 	signal vram_cs				: std_logic;
 	signal vram_oe				: std_logic;
-	signal ram_a				: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_a				: std_logic_vector(19 downto 0);
 	signal ram_din				: std_logic_vector(7 downto 0);
 	signal ram_dout			: std_logic_vector(7 downto 0);
 	signal ram_cs				: std_logic;
@@ -157,8 +157,8 @@ architecture behavior of fblabs_top is
 	signal s_ear				: std_logic;	
 	signal s_spk				: std_logic;	
 	signal s_mic				: std_logic;
-	signal s_psg				: unsigned( 9 downto 0);
---	signal s_sid				: unsigned(17 downto 0);
+	signal s_psg_L				: unsigned( 7 downto 0);
+	signal s_psg_R				: unsigned( 7 downto 0);
 
 	-- Keyboard
 	signal kb_rows				: std_logic_vector(7 downto 0);
@@ -223,8 +223,8 @@ begin
 		usar_kempjoy	=> '1',
 		usar_keyjoy		=> '1',
 		use_turbosnd_g	=> false,
-		use_overlay_g	=> false,
-		use_sprites_g	=> false
+		use_sid_g		=> false,
+		use_1024kb_g	=> false
 	)
 	port map (
 		-- Clock
@@ -242,7 +242,7 @@ begin
 		iKeyScanDoubler	=> FKeys_s(2),
 		iKeyScanlines		=> FKeys_s(7),
 		iKeyDivMMC			=> FKeys_s(10),
-		iKeyM1				=> FKeys_s(9),
+		iKeyMF				=> FKeys_s(9),
 		iKeyTurbo			=> FKeys_s(8),
 		iKeysHard			=> (others => '0'),
 
@@ -296,8 +296,10 @@ begin
 		iEAR					=> s_ear,
 		oSPK					=> s_spk,
 		oMIC					=> s_mic,
-		oPSG					=> s_psg,
-		oSID					=> open,
+		oPSG_L				=> s_psg_L,
+		oPSG_R				=> s_psg_R,
+		oSID_L				=> open,
+		oSID_R				=> open,
 		oDAC					=> open,
 
 		-- Joystick
@@ -348,11 +350,6 @@ begin
 		oCpu_rfsh_n			=> open,
 		iCpu_iorqula		=> '0',
 
-		-- Overlay
-		oOverlay_addr 		=> open,
-		iOverlay_data		=> (others => '0'),
-		pixel_clock_o     => open,
-	
 		-- Debug
 		oD_leds				=> open,
 		oD_reg_o				=> open,
@@ -364,14 +361,14 @@ begin
 	port map(
 		clk				=> clock_master,
 		-- Porta 0 = VRAM
-		porta0_addr		=> vram_a,
+		porta0_addr		=> vram_a(18 downto 0),
 		porta0_ce		=> vram_cs,
 		porta0_oe		=> vram_oe,
 		porta0_we		=> '0',
 		porta0_din		=> (others => '0'),
 		porta0_dout		=> vram_dout,
 		-- Porta 1 = Upper RAM
-		porta1_addr		=> ram_a,
+		porta1_addr		=> ram_a(18 downto 0),
 		porta1_ce		=> ram_cs,
 		porta1_oe		=> ram_oe,
 		porta1_we		=> ram_we,
@@ -391,7 +388,8 @@ begin
 		ear			=> s_ear,
 		spk			=> s_spk,
 		mic			=>	s_mic,
-		psg			=>	std_logic_vector(s_psg(7 downto 0)),
+		psg_L			=>	std_logic_vector(s_psg_L),
+		psg_R			=>	std_logic_vector(s_psg_R),
 		i2s_bclk		=> dac_bclk,
 		i2s_ws		=> dac_ws,
 		i2s_data		=> dac_dout,
@@ -408,21 +406,21 @@ begin
 		enable			=> '1',
 		clock				=> clock_master,
 		reset				=> poweron_s,
+		--
 		ps2_clk			=> ps2_clk,
 		ps2_data			=> ps2_data,
+		--
 		rows				=> kb_rows,
 		cols				=> kb_columns,
-		teclasF			=> FKeys_s
+		functionkeys_o	=> FKeys_s
 	);
 	
 	mousectrl : entity work.mouse_ctrl 
-	generic map 
-	(
+	generic map (
 		clkfreq 		=> 28000,
 		SENSIBILITY	=> 1
 	) 
-	port map
-	(
+	port map (
 		enable		=> mouse_en,
 		clock			=> clock_master,
 		reset			=> reset_s,

@@ -1,3 +1,7 @@
+call setsdcc
+cd ..\app
+make
+cd ..\makefirmware
 makefirmware
-rem copy TBBLUE.FW f:\
+copy TBBLUE.FW e:\
 pause

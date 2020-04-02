@@ -10,5 +10,6 @@ tbumaker 5 %version%
 mkdir ..\BINs\fblabs\%version%
 copy /y ..\synth\fblabs\output_files\fblabs.pof ..\BINs\fblabs\%version%\fblabs.pof
 copy /y TBBLUE.TBU ..\BINs\fblabs\%version%\
+copy /y TBBLUE.TBU E:\
 
 pause

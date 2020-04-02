@@ -115,17 +115,6 @@ NET "joy_fire3_i"       LOC="P39"  | IOSTANDARD = LVCMOS33 | PULLUP;
 #NET "gpio_io<34>"       LOC="P14"  | IOSTANDARD = LVCMOS33 | PULLUP;
 #NET "gpio_io<35>"       LOC="P12"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
-# Joystick 2 in GPIO port
-NET "joy2_up_i"         LOC="P12"  | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "joy2_down_i"       LOC="P16"  | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "joy2_left_i"       LOC="P22"  | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "joy2_right_i"      LOC="P26"  | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "joy2_fire1_i"      LOC="P30"  | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "joy2_fire2_i"      LOC="P34"  | IOSTANDARD = LVCMOS33 | PULLUP;
-
-# Lightpen in GPIO
-NET "lightpen_i"        LOC="P41"  | IOSTANDARD = LVCMOS33 | PULLUP;
-
 # DEBUG
 NET "led_o"             LOC="P11"  | IOSTANDARD = LVCMOS33;
 

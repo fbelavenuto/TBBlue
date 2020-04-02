@@ -54,17 +54,14 @@ __sfr __banked __at 0x7FFE HROW7; // SPACE,SYM SHFT,M,N,B
 #define MF128_FILE          "mf128.rom"
 
 /* Hardware IDs */
-#define HWID_DE1A		1		/* DE-1 (old) */
-#define HWID_DE2A		2		/* DE-2 (old) */
-#define HWID_DE2N		3		/* DE-2 (new) */
-#define HWID_DE1N		4		/* DE-1 (new) */
+#define HWID_DE1A		1		/* DE-1 */
+#define HWID_DE2A		2		/* DE-2 */
 #define HWID_FBLABS		5		/* FBLabs */
 #define HWID_VTRUCCO	6		/* VTrucco */
 #define HWID_WXEDA		7		/* WXEDA */
 #define HWID_EMULATORS	8		/* Emulators */
 #define HWID_ZXUNO		9		/* ZX-Uno */
 #define HWID_ZXNEXT		10		/* ZX Spectrum Next */
-#define HWID_ZXNEXT_AB	250		/* ZX Spectrum Next Anti-brick */
 
 /* Register numbers */
 #define REG_MACHID		0
@@ -76,7 +73,6 @@ __sfr __banked __at 0x7FFE HROW7; // SPACE,SYM SHFT,M,N,B
 #define REG_PERIPH2		6
 #define REG_TURBO		7
 #define REG_PERIPH3		8
-#define REG_ANTIBRICK	0x10
 #define REG_DEBUG		0xFF
 
 /* Reset types */
@@ -85,16 +81,11 @@ __sfr __banked __at 0x7FFE HROW7; // SPACE,SYM SHFT,M,N,B
 #define RESET_SOFT		1
 #define RESET_NONE		0
 
-/* Anti-brick */
-#define AB_CMD_NORMALCORE	0x80
-#define AB_BTN_DIVMMC		0x02
-#define AB_BTN_MULTIFACE	0x01
-
 /* RAM pages */
-#define RAMPAGE_RAMDIVMMC	0x00
-#define RAMPAGE_ROMDIVMMC	0x18
-#define RAMPAGE_ROMMF		0x19
-#define RAMPAGE_ROMSPECCY	0x1C
+#define RAMPAGE_RAMDIVMMC	0x08 /* 0x00 */
+#define RAMPAGE_ROMDIVMMC	0x04 /* 0x18 */
+#define RAMPAGE_ROMMF		0x05 /* 0x19 */
+#define RAMPAGE_ROMSPECCY	0x00 /* 0x1C */
 
 
 #endif /* _HARDWARE_H */
