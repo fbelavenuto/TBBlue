@@ -44,8 +44,7 @@ use work.keyscans.all;
 
 entity keyboard is
 	generic (
-		clkfreq_g		: integer;										-- This is the system clock value in kHz
-		use_ps2_alt_g	: boolean	:= false							-- Use alternative PS/2 interface
+		clkfreq_g		: integer										-- This is the system clock value in kHz
 	);
 	port (
 		enable			: in    std_logic;
@@ -78,44 +77,29 @@ architecture rtl of keyboard is
 		    k5, k6, k7, k8	: std_logic_vector(4 downto 0);
 
 	signal idata				: std_logic_vector(7 downto 0);
-	signal idata_rdy			: std_logic                     := '0';
+	signal idata_rdy			: std_logic                     	:= '0';
 	signal ctrl_s				: std_logic								:= '1';
 	signal alt_s				: std_logic								:= '1';
 
 begin
 
 	-- PS/2 interface
-	--uo: if not use_ps2_alt_g generate
-		ps2 : entity work.ps2_iobase
-		generic map (
-			clkfreq			=> clkfreq_g
-		)
-		port map (
-			enable			=> enable,
-			clock				=> clock,
-			reset				=> reset,
-			ps2_clk			=> ps2_clk,
-			ps2_data			=> ps2_data,
-			idata_rdy		=> idata_rdy,
-			idata				=> idata,
-			send_rdy			=> open,
-			odata_rdy		=> keyb_valid,
-			odata				=> keyb_data
-		);
-	--end generate;
-
---	ua: if use_ps2_alt_g generate
---		ps2: entity work.io_ps2_keyboard
---		port map (
---			clk => clock,
---			kbd_clk => ps2_clk,
---			kbd_dat => ps2_data,
---			
---			--outs
---			interrupt => keyb_valid,
---			scanCode => keyb_data
---		);
---	end generate;
+	ps2 : entity work.ps2_iobase
+	generic map (
+		clkfreq			=> clkfreq_g
+	)
+	port map (
+		enable			=> enable,
+		clock				=> clock,
+		reset				=> reset,
+		ps2_clk			=> ps2_clk,
+		ps2_data			=> ps2_data,
+		idata_rdy		=> idata_rdy,
+		idata				=> idata,
+		send_rdy			=> open,
+		odata_rdy		=> keyb_valid,
+		odata				=> keyb_data
+	);
 		
 	-- Mesclagem das linhas
 	k1 <= keys(0) when rows(0) = '0' else (others => '1');
@@ -231,16 +215,16 @@ begin
 							when KEY_KP9			=> keys(4)(1) <= release; -- 9
 							
 							-- Teclas para o FPGA e nao para o Speccy
-							when KEY_F1				=> functionkeys_o(0)	<= not release;
-							when KEY_F2				=> functionkeys_o(1)	<= not release;
-							when KEY_F3				=> functionkeys_o(2)	<= not release;
-							when KEY_F4				=> functionkeys_o(3)	<= not release;
-							when KEY_F5				=> functionkeys_o(4)	<= not release;
-							when KEY_F6				=> functionkeys_o(5)	<= not release;
-							when KEY_F7				=> functionkeys_o(6)	<= not release;
-							when KEY_F8				=> functionkeys_o(7)	<= not release;
-							when KEY_F9				=> functionkeys_o(8)	<= not release;
-							when KEY_F10			=> functionkeys_o(9)	<= not release;
+							when KEY_F1				=> functionkeys_o(0)		<= not release;
+							when KEY_F2				=> functionkeys_o(1)		<= not release;
+							when KEY_F3				=> functionkeys_o(2)		<= not release;
+							when KEY_F4				=> functionkeys_o(3)		<= not release;
+							when KEY_F5				=> functionkeys_o(4)		<= not release;
+							when KEY_F6				=> functionkeys_o(5)		<= not release;
+							when KEY_F7				=> functionkeys_o(6)		<= not release;
+							when KEY_F8				=> functionkeys_o(7)		<= not release;
+							when KEY_F9				=> functionkeys_o(8)		<= not release;
+							when KEY_F10			=> functionkeys_o(9)		<= not release;
 							when KEY_F11			=> functionkeys_o(10)	<= not release;
 							when KEY_F12			=> functionkeys_o(11)	<= not release;
 

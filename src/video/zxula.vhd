@@ -41,9 +41,6 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity zxula is
-	generic (
-		DEBUG		: boolean := false
-	);
 	port (
 		clock_28_i		: in  std_logic;
 		clock_i			: in  std_logic;
@@ -90,7 +87,6 @@ entity zxula is
 		rgb_vsync_o		: out std_logic;
 		rgb_hblank_o	: out std_logic;
 		rgb_vblank_o	: out std_logic;
-		i_sw				: in  std_logic							:= '0';
 		-- Horizontal and vertical counters
 		hcount_o			: out unsigned(8 downto 0);
 		vcount_o			: out unsigned(8 downto 0);
@@ -392,7 +388,6 @@ begin
 		end if;
 	end process;
 
-g1: if not DEBUG generate
 	-- Register data
 	process (reset_i, clk7_s)
 	begin
@@ -404,12 +399,6 @@ g1: if not DEBUG generate
 			end if;
 		end if;
 	end process;
-end generate;
-
-g2: if DEBUG generate
-	radas_en_s <= i_sw;
-end generate;
-
 
 	-- Enhanced ULA: palette RAM address and control bus multiplexing
 	process (hc_s, input_to_attr_out_s, radas_en_s, clk7_s)
@@ -621,8 +610,7 @@ end generate;
 	speaker_o <= speaker_s;
 
 	-- Simulates floating-bus on I/O port 0xFF
-	--floatingbus_s <= mem_data_i when bitmap_addr_s = '1' or attr_addr_s = '1'	else (others => '1');
-	floatingbus_s <= mem_data_i when mem_cs_s = '1'	else (others => '1');
+	floatingbus_s <= mem_data_i when bitmap_addr_s = '1' or attr_addr_s = '1'	else (others => '1');
 
 	-- ULA-CPU interface
 	cpu_data_o <=
@@ -632,8 +620,7 @@ end generate;
 					'0' & enh_ula_addr_reg_s				when enh_ula_addr_portsel_s = '1' and cpu_rd_n_i = '0'			else	-- enh_ula addr register
 					"0000000" & enh_ula_soft_en_s			when enh_ula_data_portsel_s = '1' and cpu_rd_n_i = '0' and enh_ula_addr_reg_s(6) = '1'	else
 					enh_ula_pal_cpu_dout_s					when enh_ula_data_portsel_s = '1' and cpu_rd_n_i = '0' and enh_ula_addr_reg_s(6) = '0'	else
-					cpu_data_i									when bitmap_addr_s = '1' or attr_addr_s = '1'						else
-					(others => '1');
+					floatingbus_s;
 
 	has_data_o	<= '1' when iocs_i = '1'         		  and cpu_rd_n_i = '0'	else
 						'1' when port255_en_s = '1'           and cpu_rd_n_i = '0'	else

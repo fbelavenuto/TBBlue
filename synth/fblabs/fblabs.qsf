@@ -199,7 +199,6 @@ set_global_assignment -name VHDL_FILE ../../src/ram/dpram2.vhd
 set_global_assignment -name VHDL_FILE ../../src/rom/bootrom.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/keymaps.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/keyboard.vhd
-set_global_assignment -name VHDL_FILE ../../src/shared/io_ps2_keyboard.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/ps2_iobase.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/dpSRAM_5128.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/Audio_TDA1543.vhd

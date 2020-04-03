@@ -142,10 +142,6 @@ begin
 	rs232_tx  <= port_a_o(3);
 	rs232_cts <= port_a_o(2);
 
---	port_a_i  <= "0000" & rs232_rx & rs232_dtr & "00";
---	rs232_tx  <= port_a_o(7);
---	rs232_cts <= port_a_o(6);
-
 	process (clk)
 		variable mixed_l_v : unsigned(9 downto 0);
 		variable mixed_r_v : unsigned(9 downto 0);

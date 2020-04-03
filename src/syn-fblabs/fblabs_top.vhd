@@ -319,10 +319,6 @@ begin
 		iLp_signal			=> lightpen_in,
 		oLp_en				=> lightpen_en,
 
-		-- RTC
-		ioRTC_sda			=> 'Z',
-		ioRTC_scl			=> 'Z',
-
 		-- Serial
 		iRs232_rx			=> '0',
 		oRs232_tx			=> open,
@@ -399,8 +395,7 @@ begin
 	-- Keyboard Speccy emulado com teclado PS/2
 	kb: entity work.keyboard
 	generic map (
-		clkfreq_g		=> 28000,
-		use_ps2_alt_g	=> false
+		clkfreq_g		=> 28000
 	)
 	port map (
 		enable			=> '1',

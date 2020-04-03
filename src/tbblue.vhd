@@ -146,10 +146,6 @@ entity tbblue is
 		iLp_signal			: in  std_logic;
 		oLp_en				: out std_logic;
 
-		-- RTC
-		ioRTC_sda			: inout std_logic;
-		ioRTC_scl			: inout std_logic;
-
 		-- Serial
 		iRs232_rx			: in  std_logic							:= '0';
 		oRs232_tx			: out std_logic;
@@ -395,12 +391,6 @@ architecture Behavior of tbblue is
 	signal bus_busreq_n_s			: std_logic;
 	signal bus_iorqula_s				: std_logic;
 
-	-- RTC
-	signal port103B_en_s				: std_logic;
-	signal port113B_en_s				: std_logic;
-	signal rtc_scl_s					: std_logic;
-	signal rtc_sda_s					: std_logic;
-
 	-- RGB
 	signal rgb_r_s						: std_logic_vector(2 downto 0);
 	signal rgb_g_s						: std_logic_vector(2 downto 0);
@@ -631,8 +621,7 @@ begin
 
 	--
 	kmouse : entity work.kempston_mouse
-	port map
-	(
+	port map (
 		clk					=> clk_cpu,						-- Entrada do clock da CPU
 		rst_n					=> reset_n,						-- Reset Power-on
 		cpu_a					=> cpu_a,						-- Barramento de enderecos da CPU
@@ -650,12 +639,10 @@ begin
 		--saida
 		mouse_d				=> s_mouse_d,
 		mouse_out			=> s_mouse_out
-
 	);
 
 	lp: entity work.light_pen
-	port map
-	(
+	port map (
 		cpu_a						=> cpu_a,
 		cpu_iorq_n				=> cpu_ioreq_n,
 		cpu_rd_n					=> cpu_rd_n,
@@ -673,8 +660,7 @@ begin
 	);
 
 	kjoy: entity work.kempston_joystick
-	port map
-	(
+	port map (
 		cpu_a					=> cpu_a,
 		cpu_iorq_n			=> cpu_ioreq_n,
 		cpu_rd_n				=> cpu_rd_n,
@@ -700,8 +686,7 @@ begin
 
 	-- Keyboard joy have 2 buttons
 	joys: entity work.joystick_keys
-	port map
-	(
+	port map (
 		-- controle
 		cpu_a					=> cpu_a,
 		enable				=> usar_keyjoy,			-- 1 habilita
@@ -1101,9 +1086,6 @@ begin
 	port253B_en_s	<= '1' when cpu_ioreq_n = '0' and cpu_m1_n = '1' and
 										cpu_a = X"253B"															else '0';
 
-	port103B_en_s	<= '1' when iowr_en = '1' and cpu_a = X"103B"									else '0';	-- RTC SCL (W)
-	port113B_en_s	<= '1' when iocs_en = '1' and cpu_a = X"113B"									else '0';	-- RTC SDA (R/W)
-
 	-- Memory control
 	-- 128K has pageable RAM at 0xc000
 	-- +3 has various additional modes in addition to "normal" mode, which is
@@ -1267,25 +1249,6 @@ begin
 		end if;
 	end process;
 
-	-- RTC SCL and SDA write
-	process(reset_s, clk_cpu)
-	begin
-		if reset_s = '1' then
-			rtc_scl_s <= '1';
-			rtc_sda_s <= '1';
-		elsif falling_edge(clk_cpu) then
-			if port103B_en_s = '1' then
-				rtc_scl_s <= cpu_do(0);
-			elsif port113B_en_s = '1' and cpu_wr_n = '0' then
-				rtc_sda_s <= cpu_do(0);
-			end if;
-		end if;
-	end process;
-
-	-- RTC
-	ioRTC_scl	<= '0' when rtc_scl_s = '0' else 'Z';
-	ioRTC_sda	<= '0' when rtc_sda_s = '0' else 'Z';
-
 	-- Conexoes dos barramentos
 	ula_din  <= cpu_do;
 	ram_din  <= cpu_do;
@@ -1308,7 +1271,6 @@ begin
 			kempston_dout				when s_kj_out       = '1'			else		-- Leitura da porta Kempston (1F) (tem que ser antes de divmmc_en)
 			s_m1_do				 		when s_m1_dout		  = '1'			else     -- Multiface 128
 			divmmc_do					when divmmc_dout    = '1'			else		-- Leitura das portas da interface DivMMC
-			"0000000" & ioRTC_sda	when port113B_en_s  = '1'			else		-- RTC SDA reading
 			iCpu_di;
 
 	-- Ligacao dos sinais das memorias com o mundo externo
@@ -1344,13 +1306,13 @@ begin
 	oRGB_hb_n	<= hblank_n_s;
 	oRGB_vb_n	<= vblank_n_s;
 
-	oRGB_r <= (others => '0')				when hblank_n_s = '0' or vblank_n_s = '0'					else
+	oRGB_r <= (others => '0')	when hblank_n_s = '0' or vblank_n_s = '0'	else
 	          rgb_r_s;
 
-	oRGB_g <= (others => '0') 				when hblank_n_s = '0' or vblank_n_s = '0'					else
+	oRGB_g <= (others => '0')	when hblank_n_s = '0' or vblank_n_s = '0'	else
 	          rgb_g_s;
 
-	oRGB_b <= (others => '0') 				when hblank_n_s = '0' or vblank_n_s = '0'					else
+	oRGB_b <= (others => '0')	when hblank_n_s = '0' or vblank_n_s = '0'	else
 	          rgb_b_s;
 
 	-- Audio

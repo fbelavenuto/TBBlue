@@ -1,38 +1,37 @@
-Main:
-- SID filters added.
-- PAN control from AYs and SID
-- Implemented Floating-bus in I/O port 0xFF
-- Implemented raster interrupt
-- Fixed MC joysticks.
-- Removed Next modules specific (Sprites, Layer2, etc)
-- Added support to 1MB SRAM: Changed SRAM map (Need change TBBLUE.FW between updates)
-- Added show version of Core and Firmware at boot time, and minimum core version check
+Principal:
+- Adicionado filtros SID.
+- Implementado Floating-bus
+- Implementado raster interrupt
+- Corrigido joysticks da placa MC.
+- Removido coisas espec√≠ficas do ZX Next (Sprites, Layer2, etc)
+- Adicionado suporte a 1MB SRAM: Mudado mapa SRAM (Precisa mudar o TBBLUE.FW s√≥ depois de atualizar o core)
+- Exibindo vers√£o do core e firmware na tela de boot, e checagem de vers√£o m√≠nima de core.
 
-Vers„o 1.08:
-.AlteraÁıes no Core (todas as placas):
-	- Protocolo PS/2 reescrito para suportar mais variaÁıes de mouse.
-	- CorreÁ„o do modo de interrupÁ„o IM2 do Z80 (corrige o Shadow Warrios 128k e provavelmente outros jogos).
-	- CorreÁ„o na contenÁ„o de memÛria do Spectrum +3 (corrige a voz do Dizzy Fantasy World e provavelmente outros jogos)
-	- Modo de vÌdeo Layer 2. 256 x 192 com 256 cores por pixel, sem color clash.
-	- SeleÁ„o do modo Timex no menu de boot
-	- Acerto no volume interno do EAR. Agora È possivel ouvir o retorno pela saÌda de ·udio.
+Vers√£o 1.08:
+.Altera√ß√µes no Core (todas as placas):
+	- Protocolo PS/2 reescrito para suportar mais varia√ß√µes de mouse.
+	- Corre√ß√£o do modo de interrup√ß√£o IM2 do Z80 (corrige o Shadow Warrios 128k e provavelmente outros jogos).
+	- Corre√ß√£o na conten√ß√£o de mem√≥ria do Spectrum +3 (corrige a voz do Dizzy Fantasy World e provavelmente outros jogos)
+	- Modo de v√≠deo Layer 2. 256 x 192 com 256 cores por pixel, sem color clash.
+	- Sele√ß√£o do modo Timex no menu de boot
+	- Acerto no volume interno do EAR. Agora √© possivel ouvir o retorno pela sa√≠da de √°udio.
 .Todas as placas, exceto VTrucco e FBLabs
 	- Interface TurboSound Next. 3 x AY3-8910 e SID.
-.EspecÌficas para Next e VTrucco
+.Espec√≠ficas para Next e VTrucco
 	- Acertos no barramento externo. Maior suporte a interfaces.
-.EspecÌficas para Next e Multicore
-	- Suporte a saÌda de video HDMI
+.Espec√≠ficas para Next e Multicore
+	- Suporte a sa√≠da de video HDMI
 	- Suporte a sprites por hardware. 64 sprites 16 x 16 com 256 cores por pixel.
-.EspecÌficas para Next
+.Espec√≠ficas para Next
 	- Anti-Brick: O firmware pode ser sempre regravado a partir do SD, sem necessidade de precisar de um gravador no JTAG.
-	- Suporte a I2C. No momento usado apenas no RelÛgio em Tempo Real
-	- Suporte a comunicaÁ„o serial. No momento usado apenas pelo mÛdulo Wi-Fi
-	- Suporte a segundo cart„o SD
+	- Suporte a I2C. No momento usado apenas no Rel√≥gio em Tempo Real
+	- Suporte a comunica√ß√£o serial. No momento usado apenas pelo m√≥dulo Wi-Fi
+	- Suporte a segundo cart√£o SD
 
-Vers„o 1.07:
+Vers√£o 1.07:
 
-Vers„o 1.06:
+Vers√£o 1.06:
 	- Adicionado os hardwares WXEDA e ZX-Uno
 	- Adicionado modo de video Radastan 128 x 192, 16 cores sem "color clash".
-	- Sistema de portas para configuraÁ„o do hardware. Na porta 0x243B Seta o registro, enquanto a porta 0x253B pode ser escrita ou lida o valor do registro. Para maiores detalhes, veja o arquivo "New IO Ports.txt".
-	- SeleÁ„o de DAC para o hardware VTrucco
+	- Sistema de portas para configura√ß√£o do hardware. Na porta 0x243B Seta o registro, enquanto a porta 0x253B pode ser escrita ou lida o valor do registro. Para maiores detalhes, veja o arquivo "New IO Ports.txt".
+	- Sele√ß√£o de DAC para o hardware VTrucco
